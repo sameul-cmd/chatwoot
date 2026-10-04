@@ -37,14 +37,12 @@ parse_inboxes_json() {
       done
 }
 
-channels_health() {
-  local id="$1" f token acct body
+# cw_use_monitor ID -> API settings (CW_*) using the monitoring user's token; returns 1 if it is not set up
+cw_use_monitor() {
+  local id="$1" f token
   f="$(monitor_env_file "$id")"
   token="$(sed -n 's/^MONITOR_TOKEN=//p' "$f" 2>/dev/null | head -n1)"
-  if [ -z "$token" ]; then
-    echo "channels_api|warn|monitoring user is not set up (run a deploy)"
-    return 0
-  fi
+  [ -n "$token" ] || return 1
   export CW_BASE_URL CW_RESOLVE CW_INSECURE CW_TOKEN
   CW_BASE_URL="$(_frontend_url "$id")"
   CW_TOKEN="$token"
@@ -53,6 +51,14 @@ channels_health() {
   if [ "$(_cfg '.deploy.target // "remote"' "$id")" = "local" ]; then
     CW_RESOLVE="$(_cfg '.domain' "$id"):$(_cfg '.deploy.https_port // 8443' "$id"):127.0.0.1"
     CW_INSECURE=1
+  fi
+}
+
+channels_health() {
+  local id="$1" acct body
+  if ! cw_use_monitor "$id"; then
+    echo "channels_api|warn|monitoring user is not set up (run a deploy)"
+    return 0
   fi
   acct="$(cw_request GET /api/v1/profile 2>/dev/null | jq -r '.accounts[0].id // empty' 2>/dev/null || true)"
   if [ -z "$acct" ]; then

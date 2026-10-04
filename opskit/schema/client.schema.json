@@ -140,10 +140,35 @@
       "type": "array",
       "items": {
         "type": "object",
+        "additionalProperties": false,
         "required": [
           "type",
           "name"
-        ]
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "widget",
+              "email",
+              "telegram",
+              "whatsapp",
+              "facebook",
+              "instagram",
+              "api"
+            ]
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "enum": [
+              "planned",
+              "connected",
+              "needs_attention"
+            ]
+          }
+        }
       }
     },
     "pack": {

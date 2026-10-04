@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 6 - Channel runbooks & checkers (planned)
-- **Current task:** Phase 6 plan written (`docs/tasks/phase-6.md`); waiting for owner approval of its 7 open questions, then start 6.1
+- **Current phase:** Phase 6 done locally; next: Phase 7 (industry packs) when the owner says go
+- **Current task:** Phase 7 plan written (`docs/tasks/phase-7.md`); waiting for the owner's answers, then start 7.1
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -39,8 +39,8 @@
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
-| 6 | Channel runbooks & checkers | Planned (task file ready, awaiting owner approval) | — |
-| 7 | Industry starter packs bn + en | Not started | — |
+| 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | full `opskit/bin/check` was still running when this was pushed: bats suites passed, selftests PENDING (update this row when it finishes) |
+| 7 | Industry starter packs bn + en | Planned (task file `docs/tasks/phase-7.md`, awaiting owner answers to 8 questions) | — |
 | 8 | aibot | Not started | — |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |
@@ -48,6 +48,7 @@
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
+- 2026-10-04 Phase 6 (6.1-6.12): opskit/lib/{channels,channels_social,channel_hints}.sh, lib/{mail_probe,channel_plan}.py, data/channel_plan.yaml, schema channel_plan + typed `channels[]`, templates/rails/read_channel_secret.rb, tests/{fake_mail,fake_meta}.py + sim_channels.rb/sim_email.rb, commands `channels check|plan`, runbooks website-widget/email/telegram/whatsapp-cloud-api/facebook-instagram. Verify: `opskit/bin/opskit channels check <id>`, `opskit selftest`
 - 2026-10-04 Phase 5 (5.1-5.11): opskit/lib/{upgrade,smoke}.sh, opskit/bin/sync-rehearsal, schema upgrade_window + support, backup manifest schema_version, command `upgrade <id> --to <tag> --info|--stage|--apply`, `client new --tag`, selftest upgrade, bats upgrade/sync_rehearsal, docs/runbooks/upgrade.md + upgrade-checklist.md. Verify: opskit/bin/check -> ALL CHECKS PASSED incl. SELFTEST UPGRADE PASSED.
 - 2026-10-04 Phase 4 (4.1-4.10): opskit/lib/{notify,alert_state,health,channels_health,monitor}.sh, templates/rails/ensure_monitor.rb, templates/monitor.cron.tmpl, schema alerts, commands monitor run|status and alerts set-telegram|test, selftest v3 (8 monitoring rows), bats notify/alert_state/health/monitor, tests/fake_telegram.py, docs/runbooks/monitoring.md, opskit/hub/README.md. Verify: opskit/bin/check -> ALL CHECKS PASSED incl. the monitoring rows.
 - 2026-10-04 Phase 3 (3.1-3.11): `opskit/{lib/{crypto,alert,prune,backup,restore,chatwoot_api}.sh, agent/backup.sh, templates/backup.cron.tmpl}`, schema `backup`, commands `backup run|list|verify`, `restore`, selftest v2, bats `backup_lib/backup_agent/backup_run`, `docs/runbooks/restore.md`. Verify: `OPSKIT_BUILD_CA=... opskit/bin/check` -> ALL CHECKS PASSED incl. SELFTEST PASSED (backup + restore test + overwrite protection rows).
@@ -71,6 +72,19 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 6 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| `channels check` PASS for widget / email / Telegram on the demo client | PASS (our side) | live demo: 16 PASS rows; widget round trip, API inbox round trip, email IMAP+SMTP login (fake mail server) and loopback, Telegram webhook endpoint + `getWebhookInfo` (fake Telegram), WhatsApp settings + verify handshake + wrong-token refusal (fake Meta) |
+| FAIL with a plain fix hint for broken inboxes | PASS | 7 FAIL rows on deliberately broken/dead inboxes (wrong email password -> "mail server rejected the login ... APP PASSWORD"; incomplete WhatsApp settings; dead Telegram webhook), each with a `fix:` line; command exits 1 |
+| No secrets printed | PASS | selftest asserts no token/password in output; tokens go to curl through stdin config, mail prober never prints passwords; probes are read-only |
+| `channels plan <id>` client/owner to-do list en + bn | PASS | bats `channel_plan.bats` (7); Bangla flagged `review_required` |
+| Runbooks (5) | WRITTEN, not yet tried with real accounts | `docs/runbooks/*`; facts from Chatwoot code + public docs (web search) |
+| `opskit selftest` incl. channel rows | PASSED earlier in the session (before wording edits); final full-check run PENDING | update when `opskit/bin/check` finishes |
+| Upstream files unchanged | PASS | upstream-path bats test: 0 files differ from v4.18.0 |
+Bugs found and fixed during the phase: `docker exec` stdin swallowing, status-code concatenation ("000000"), subshell-lost status variables, fake IMAP lacking `EXAMINE`, patched-upstream gap in `sync-rehearsal`.
+NOT VERIFIED: anything that needs the real Telegram, Meta/WhatsApp, Facebook/Instagram or Gmail/Microsoft servers (sandbox cannot reach them) - the WhatsApp runbook has NOT been walked with a Meta test number (pending the owner's Meta account); Gmail/Workspace OAuth wording and WhatsApp billing change of 1 Oct 2026 come from web research (A-029, *(verify)*); the Bangla texts need proofreading.
+
 ### Phase 5 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|

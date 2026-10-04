@@ -50,6 +50,13 @@ Not applicable yet (no UI review done); bot answer quality is Phase 8.
 - Webhook has retry behaviour for HTTP 429/500 from the bot (`RETRYABLE_AGENT_BOT_STATUSES`); aibot should return 200 quickly and process asynchronously.
 - Ports 5432/6379/3000 are published on 127.0.0.1 in the official compose; our rendered compose must drop 5432/6379.
 
+## 5b. Channel findings (Phase 6, task 6.1, verified live on a demo stack, v4.18.0)
+- Widget visitor flow works end to end: `POST /api/v1/widget/config?website_token=` returns `website_channel_config.auth_token`; `POST /api/v1/widget/messages` with header `X-Auth-Token` creates a conversation. Conversations/contacts are deletable through the API (used for clean-up).
+- The inbox API (administrator token) shows IMAP/SMTP settings incl. passwords for email inboxes, `bot_name` (not the token) for Telegram, `provider_config` incl. `webhook_verify_token` for WhatsApp, and `reauthorization_required` only for Facebook, Instagram, TikTok, WhatsApp embedded sign-up, Google/Microsoft email.
+- Webhooks: `POST /webhooks/telegram/:bot_token`; `GET|POST /webhooks/whatsapp/:phone` (right verify token echoes the challenge, wrong one gives 401); `/webhooks/instagram` (wrong token 401); Facebook on `/bot` (wrong token still returns 200, so it cannot prove anything).
+- Telegram and WhatsApp-cloud inbox creation call the real services, so the sandbox cannot create them (api.telegram.org, graph.facebook.com unreachable). The demo uses simulated inboxes written to the database.
+- Instagram/Facebook app id/secret and verify token are installation configs readable by name.
+
 ## 6. Matches the SPEC? (agent's view)
 Mostly yes. Answers to *(verify)* items so far:
 - CE image tag format: `chatwoot/chatwoot:v4.18.0-ce` exists.

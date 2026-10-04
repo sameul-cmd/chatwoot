@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/channel_plan.schema.json",
+  "title": "Channel to-do list data (English + Bangla)",
+  "type": "object",
+  "required": ["common", "widget", "email", "telegram", "whatsapp", "facebook", "instagram", "api"],
+  "additionalProperties": { "$ref": "#/$defs/channel" },
+  "$defs": {
+    "text": { "type": "object", "required": ["en", "bn"], "additionalProperties": false, "properties": { "en": { "type": "string", "minLength": 1 }, "bn": { "type": "string", "minLength": 1 } } },
+    "channel": {
+      "type": "object", "required": ["title", "items"], "additionalProperties": false,
+      "properties": {
+        "title": { "$ref": "#/$defs/text" },
+        "items": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "required": ["who", "en", "bn"], "additionalProperties": false,
+            "properties": {
+              "who": { "enum": ["client", "owner"] },
+              "en": { "type": "string", "minLength": 1 },
+              "bn": { "type": "string", "minLength": 1 },
+              "review_required": { "type": "boolean", "default": true }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -44,6 +44,12 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/smoke.sh"
 # shellcheck source=../lib/upgrade.sh
 . "$OPSKIT_ROOT/lib/upgrade.sh"
+# shellcheck source=../lib/channel_hints.sh
+. "$OPSKIT_ROOT/lib/channel_hints.sh"
+# shellcheck source=../lib/channels.sh
+. "$OPSKIT_ROOT/lib/channels.sh"
+# shellcheck source=../lib/channels_social.sh
+. "$OPSKIT_ROOT/lib/channels_social.sh"
 # shellcheck source=../lib/checks.sh
 . "$OPSKIT_ROOT/lib/checks.sh"
 
@@ -67,6 +73,8 @@ Commands:
   alerts set-telegram|test <id>   save the Telegram bot settings (env TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) / send a test message
   upgrade <id> --to <tag> --info|--stage|--apply [--yes] [--outage-fix]
                               safe upgrade: release info / rehearsal on a copy / live upgrade with automatic rollback
+  channels check <id> [--send-test] [--inbox N]   test every connected channel: PASS / WARN / FAIL with a fix hint
+  channels plan <id> [--lang en|bn|both] [--for client|owner|all]   the client's (and our) to-do list per channel
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
   pack validate <file>        validate a pack item file against the schema
@@ -239,6 +247,7 @@ cmd_selftest() {
   if [ "$rc" -eq 0 ]; then
     teardown_staging "$sid" >/dev/null 2>&1 || true
     _selftest_monitoring "$id" "$tmp" || rc=1
+    _selftest_channels "$id" "$tmp" || rc=1
   fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
   return "$rc"
@@ -307,6 +316,50 @@ cmd_selftest_upgrade() {
     _selftest_row "upgrade history written" FAIL "history incomplete"; rc=1
   fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST UPGRADE PASSED"; else echo "SELFTEST UPGRADE FAILED"; fi
+  return "$rc"
+}
+
+# _selftest_channels ID TMPDIR -> `channels check` against simulated channels (pretend mail/Telegram/Meta servers)
+_selftest_channels() {
+  local id="$1" tmp="$2" T rc=0 out sc p1 p2 p3 im sm tok n h tgp mp
+  T="$tmp/channels"
+  mkdir -p "$T"
+  tok='123456:SIMULATEDTOKENxxxxxxxxxxxxxxxxxxxxx'
+  python3 "$OPSKIT_ROOT/tests/fake_mail.py" "$T/mail.ports" box@example.test good-pass &
+  p1=$!
+  python3 "$OPSKIT_ROOT/tests/fake_meta.py" "$T/meta.port" "+880 1700-000001" &
+  p2=$!
+  jq -n --arg u "https://chat.selftest.localhost:18443/webhooks/telegram/${tok}" '{ok:true,result:{url:$u,pending_update_count:0}}' >"$T/wh.json"
+  python3 "$OPSKIT_ROOT/tests/fake_telegram.py" "$T/tg.port" "$T/tg.log" "$T/wh.json" &
+  p3=$!
+  for _ in $(seq 1 50); do [ -s "$T/mail.ports" ] && [ -s "$T/meta.port" ] && [ -s "$T/tg.port" ] && break; sleep 0.1; done
+  im="$(jq -r .imap "$T/mail.ports")"
+  sm="$(jq -r .smtp "$T/mail.ports")"
+  # shellcheck disable=SC2064
+  trap "kill $p1 $p2 $p3 2>/dev/null; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  cw_use_stack "$id" || { _selftest_row "channels: setup" FAIL "no API token"; return 1; }
+  cw_request POST /api/v1/accounts/1/inboxes -H 'Content-Type: application/json' -d '{"name":"ST widget","channel":{"type":"web_widget","website_url":"https://shop.example.com"}}' >/dev/null
+  cw_request POST /api/v1/accounts/1/inboxes -H 'Content-Type: application/json' -d '{"name":"ST api","channel":{"type":"api"}}' >/dev/null
+  for h in "ST good mail|box@example.test|good-pass" "ST broken mail|broken@example.test|wrong-password-xyz"; do
+    IFS='|' read -r n sc p <<<"$h"
+    dc "$id" exec -T -e INBOX_NAME="$n" -e EMAIL="$sc" -e IMAP_PORT="$im" -e SMTP_PORT="$sm" -e PASSWORD="$p" rails bundle exec rails runner - <"$OPSKIT_ROOT/tests/rails/sim_email.rb" >/dev/null 2>&1
+  done
+  for h in telegram whatsapp whatsapp_broken; do
+    dc "$id" exec -T -e ACTION="$h" rails bundle exec rails runner - <"$OPSKIT_ROOT/tests/rails/sim_channels.rb" >/dev/null 2>&1
+  done
+  tgp="$(cat "$T/tg.port")"
+  mp="$(cat "$T/meta.port")"
+  export TELEGRAM_API_BASE="http://127.0.0.1:${tgp}"
+  export META_GRAPH_BASE="http://127.0.0.1:${mp}"
+  out="$(channels_check "$id" --send-test 2>&1)"
+  sc=$?
+  kill "$p1" "$p2" "$p3" 2>/dev/null || true
+  rows() { printf '%s\n' "$out" | grep -F "$1" | grep -c " $2 " || true; }
+  if [ "$(rows 'ST widget (widget)' PASS)" = 4 ] && [ "$(rows 'ST api (API)' PASS)" = 1 ]; then _selftest_row "channels: widget + API inbox" PASS "page, script, WebSocket, visitor round trip; API round trip"; else _selftest_row "channels: widget + API inbox" FAIL "unexpected rows"; rc=1; fi
+  if [ "$(rows 'ST good mail (email)' PASS)" = 3 ] && [ "$(rows 'ST broken mail (email)' FAIL)" -ge 1 ] && printf '%s\n' "$out" | grep -q 'APP PASSWORD'; then _selftest_row "channels: email good PASS / broken FAIL + hint" PASS "IMAP, SMTP, test mail; wrong password FAILs with the app-password hint"; else _selftest_row "channels: email good PASS / broken FAIL + hint" FAIL "unexpected rows"; rc=1; fi
+  if [ "$(rows 'Simulated Telegram (Telegram)' PASS)" = 4 ]; then _selftest_row "channels: Telegram" PASS "bot, webhook endpoint, Telegram view, no delivery errors"; else _selftest_row "channels: Telegram" FAIL "unexpected rows"; rc=1; fi
+  if [ "$(rows 'Simulated WhatsApp (WhatsApp)' PASS)" = 4 ] && [ "$(rows 'Simulated WhatsApp (incomplete)' FAIL)" = 1 ]; then _selftest_row "channels: WhatsApp" PASS "settings, handshake, wrong token refused, Meta view; incomplete inbox FAILs"; else _selftest_row "channels: WhatsApp" FAIL "unexpected rows"; rc=1; fi
+  if [ "$sc" -ne 0 ] && ! printf '%s\n' "$out" | grep -qE 'AGE-SECRET|good-pass|wrong-password-xyz|SIMULATED-ACCESS-TOKEN|SIMULATEDTOKEN'; then _selftest_row "channels: non-zero exit, no secrets printed" PASS "exit ${sc}; no token or password in the output"; else _selftest_row "channels: non-zero exit, no secrets printed" FAIL "exit ${sc} or a secret appeared"; rc=1; fi
   return "$rc"
 }
 
@@ -412,6 +465,25 @@ main() {
           else
             cmd_client_lifecycle "$sub" "$@"
           fi
+          ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    channels)
+      local csub="${1:-}" cid="${2:-}"
+      valid_client_id "$cid" || { log_error "usage: opskit channels check|plan <id>"; exit 2; }
+      [ -d "$(client_dir "$cid")" ] || die "client not found: $cid"
+      case "$csub" in
+        check)
+          shift 2
+          channels_check "$cid" "$@"
+          ;;
+        plan)
+          shift 2
+          python3 "$OPSKIT_ROOT/lib/channel_plan.py" "$(client_dir "$cid")/client.yaml" "$OPSKIT_ROOT/data/channel_plan.yaml" "$@"
           ;;
         *)
           usage >&2

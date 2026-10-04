@@ -24,46 +24,46 @@ A "channel" is a way customers reach the client: the website chat bubble, email,
 
 ## Tasks
 
-### [ ] 6.1 — Verify the facts live, record what a demo can and cannot do
+### [x] 6.1 — Verify the facts live, record what a demo can and cannot do
 - **Goal:** on a running demo: create a widget, API and email inbox through the API; read what the inbox API returns per type; see which inboxes can be simulated offline (Telegram / WhatsApp / Instagram via the database with validations skipped, as Chatwoot's own code allows). Record in EXPLORATION_REPORT.
 
-### [ ] 6.2 — Checker core (`lib/channels.sh`) and the PASS/WARN/FAIL table
+### [x] 6.2 — Checker core (`lib/channels.sh`) and the PASS/WARN/FAIL table
 - **Goal:** list inboxes with the monitoring user's token; one checker per type; each returns rows `inbox | check | PASS/WARN/FAIL | fix hint`; hints live in one data file; exit code non-zero on any FAIL; never prints tokens, passwords or message text.
 - **Tests:** bats with a fake API: table format, exit codes, redaction
 
-### [ ] 6.3 — Website widget checker
+### [x] 6.3 — Website widget checker
 - **Goal:** widget page and script reachable over HTTPS, WebSocket works, and a **real round trip through the widget's own REST API** (create visitor, send a message, see the conversation, delete it again).
 - **Tests:** live in the selftest; fake-API bats for the decision logic
 
-### [ ] 6.4 — API inbox checker
+### [x] 6.4 — API inbox checker
 - **Goal:** public API round trip (create contact + conversation + message, then clean up), same helper as the smoke test.
 
-### [ ] 6.5 — Email checker (IMAP/SMTP + forwarding)
+### [x] 6.5 — Email checker (IMAP/SMTP + forwarding)
 - **Goal:** logs in to IMAP and SMTP with the inbox's own settings (python helper, TLS handled, results only "ok / wrong password / cannot connect / certificate problem"); for forwarding inboxes checks the forwarding address exists and the inbound-email setting is on; optional `--send-test`.
 - **Tests:** bats with pretend IMAP and SMTP servers (small Python programs in `tests/`): good login = PASS, wrong password = FAIL with hint, unreachable host = FAIL, certificate error = WARN with hint
 
-### [ ] 6.6 — Telegram checker
+### [x] 6.6 — Telegram checker
 - **Goal:** inbox exists and shows its bot name; Chatwoot's webhook endpoint answers over HTTPS; optional read-only `getWebhookInfo` (last error, pending count); WARN if Telegram cannot be reached.
 - **Tests:** pretend Telegram server (extend `tests/fake_telegram.py`); live endpoint check on the demo
 
-### [ ] 6.7 — WhatsApp Cloud API checker
+### [x] 6.7 — WhatsApp Cloud API checker
 - **Goal:** Meta's verification handshake performed by us against our own webhook (right token = challenge echoed, wrong token = refused), inbox settings complete (phone number, phone number id, business account id, token present), optional read-only Meta status call, 24-hour-window reminder in the output.
 - **Tests:** live handshake on a simulated inbox; fake Meta server for the optional call
 
-### [ ] 6.8 — Facebook / Instagram checker
+### [x] 6.8 — Facebook / Instagram checker
 - **Goal:** `reauthorization_required`, the Meta app settings present in the server environment (`FB_APP_ID`, `FB_APP_SECRET`, `FB_VERIFY_TOKEN`, `IG_VERIFY_TOKEN`), verification handshake on `/webhooks/instagram` and `/bot`.
 - **Tests:** live handshake; env-missing cases
 
-### [ ] 6.9 — `opskit channels plan <id>` (client to-do list, English + Bangla)
+### [x] 6.9 — `opskit channels plan <id>` (client to-do list, English + Bangla)
 - **Goal:** from `client.yaml` `channels[]` + domain print exactly what the CLIENT must create or verify per channel (Meta Business account and verification, WhatsApp number not on the WhatsApp app, Facebook page admin rights, mailbox app password / IMAP on, DNS records, Telegram bot) with owner/client split; Bangla lines marked `review_required` until you approve them.
 - **Tests:** bats: every channel type produces its items; output has no secrets
 
-### [ ] 6.10 — The five runbooks (`docs/runbooks/`)
+### [x] 6.10 — The five runbooks (`docs/runbooks/`)
 - **Goal:** `website-widget.md`, `email.md`, `telegram.md`, `whatsapp-cloud-api.md`, `facebook-instagram.md`: plain-language numbered steps, who does what, costs (WhatsApp billed to the client's Meta account), common problems and the fix, each step marked verified/not yet verified. Facts from code + public docs (web search); official-doc links.
 
-### [ ] 6.11 — Broken-inbox demo and selftest v5 (acceptance)
-- **Goal:** selftest adds: widget + API + email PASS; Telegram/WhatsApp/Instagram PASS on our side; a deliberately broken email inbox (wrong password) and a WhatsApp inbox with a wrong verify token FAIL with clear hints.
+### [x] 6.11 — Broken-inbox demo and selftest v5 (acceptance)
+- **Goal:** selftest adds: widget + API + email PASS; Telegram/WhatsApp/Instagram PASS on our side; a deliberately broken email inbox (wrong password) and a WhatsApp inbox with incomplete settings (missing business account id) FAIL with clear hints. (Changed during the build: the simulated inbox cannot reach Meta, so a wrong verify token cannot be shown as a FAIL from our side; the settings-completeness check is what fails.)
 - **Acceptance:** all rows as expected in `opskit selftest`
 
-### [ ] 6.12 — Docs, verification, security review
+### [x] 6.12 — Docs, verification, security review
 - **Goal:** update PROGRESS/ASSUMPTIONS/ENVIRONMENT; `/verify-phase`; security review (probes are read-only, tokens/passwords never printed or logged, hints never contain secrets).

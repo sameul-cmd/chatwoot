@@ -1,0 +1,104 @@
+# What the CLIENT and the OWNER must do per channel. Bangla lines are drafts: review_required stays true until the
+# owner (native speaker) approves them. Placeholders: {domain} {client}.  who: client | owner
+common:
+  title: { en: "Before any channel: the web address", bn: "যেকোনো চ্যানেলের আগে: ওয়েব ঠিকানা" }
+  items:
+    - who: client
+      en: "Decide the address for the inbox, for example {domain}, and tell us who manages your domain name (DNS)."
+      bn: "ইনবক্সের জন্য ঠিকানা ঠিক করুন, যেমন {domain}, এবং আপনার ডোমেইন (DNS) কে পরিচালনা করেন তা আমাদের জানান।"
+    - who: client
+      en: "In your domain settings add an A record: {domain} -> the server IP address we give you. HTTPS only works after this."
+      bn: "ডোমেইন সেটিংসে একটি A রেকর্ড যোগ করুন: {domain} -> আমরা যে সার্ভার IP ঠিকানা দেব। এটি না হলে HTTPS কাজ করবে না।"
+widget:
+  title: { en: "Website chat bubble", bn: "ওয়েবসাইটের চ্যাট বাবল" }
+  items:
+    - who: client
+      en: "Tell us the website where the chat bubble should appear, and your logo and brand colour."
+      bn: "যে ওয়েবসাইটে চ্যাট বাবল দেখাতে চান সেটির ঠিকানা এবং আপনার লোগো ও ব্র্যান্ডের রং আমাদের জানান।"
+    - who: owner
+      en: "Create the website inbox, copy the embed code, run 'opskit channels check', send the code to the client's web person."
+      bn: "ওয়েবসাইট ইনবক্স তৈরি করুন, এমবেড কোড কপি করুন, 'opskit channels check' চালান, কোডটি ক্লায়েন্টের ওয়েব ডেভেলপারকে পাঠান।"
+    - who: client
+      en: "Paste the code on every page where the bubble should show (WordPress: a header/footer scripts plugin; Shopify/Wix: custom code settings), or ask your web developer."
+      bn: "যে পেজে বাবল দেখাতে চান সেখানে কোডটি বসান (WordPress: হেডার/ফুটার স্ক্রিপ্ট প্লাগইন; Shopify/Wix: কাস্টম কোড সেটিংস) অথবা আপনার ওয়েব ডেভেলপারকে বলুন।"
+email:
+  title: { en: "Email", bn: "ইমেইল" }
+  items:
+    - who: client
+      en: "Choose the mailbox customers write to, for example support@yourshop.com."
+      bn: "যে মেইলবক্সে গ্রাহকরা লিখবেন তা ঠিক করুন, যেমন support@yourshop.com।"
+    - who: client
+      en: "Which kind of mailbox is it? PERSONAL Gmail (ends in gmail.com): turn on 2-Step Verification, then create an APP PASSWORD (Google Account > Security > App passwords) and give it to us privately. GOOGLE WORKSPACE (your own domain on Google) and MICROSOFT 365/Outlook: app passwords no longer work, so you will simply press 'Sign in with Google/Microsoft' in the connect screen and allow access. Any other provider: give us the IMAP and SMTP host names, ports, the login and the password (privately)."
+      bn: "মেইলবক্সটি কোন ধরনের? ব্যক্তিগত Gmail (gmail.com-এ শেষ): 2-Step Verification চালু করে একটি APP PASSWORD তৈরি করুন (Google Account > Security > App passwords) এবং গোপনে আমাদের দিন। GOOGLE WORKSPACE (Google-এ নিজের ডোমেইন) ও MICROSOFT 365/Outlook: অ্যাপ পাসওয়ার্ড আর কাজ করে না, তাই সংযোগ স্ক্রিনে 'Sign in with Google/Microsoft' চাপুন ও অনুমতি দিন। অন্য প্রোভাইডার: IMAP ও SMTP হোস্ট, পোর্ট, লগইন এবং পাসওয়ার্ড গোপনে দিন।"
+    - who: owner
+      en: "One time per server, only for Google Workspace / Microsoft 365 clients: create the Google and/or Microsoft sign-in app and put GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_CALLBACK_URL (or the AZURE_APP_ID / AZURE_APP_SECRET settings) in the server settings."
+      bn: "প্রতি সার্ভারে একবার, শুধু Google Workspace / Microsoft 365 ক্লায়েন্টের জন্য: Google ও/অথবা Microsoft সাইন-ইন অ্যাপ তৈরি করে সার্ভার সেটিংসে GOOGLE_OAUTH_CLIENT_ID, GOOGLE_OAUTH_CLIENT_SECRET, GOOGLE_OAUTH_CALLBACK_URL (বা AZURE_APP_ID / AZURE_APP_SECRET) দিন।"
+    - who: client
+      en: "In your domain settings make sure SPF and DKIM are set for the sending address, so replies do not land in spam (your email provider shows the exact records)."
+      bn: "ডোমেইন সেটিংসে প্রেরণ ঠিকানার জন্য SPF ও DKIM সেট আছে কিনা দেখুন, যাতে উত্তর স্প্যামে না যায় (আপনার ইমেইল প্রোভাইডার সঠিক রেকর্ড দেখাবে)।"
+    - who: owner
+      en: "Enter the IMAP/SMTP settings in the inbox and run 'opskit channels check <id> --send-test' (sends one test mail to the mailbox itself)."
+      bn: "ইনবক্সে IMAP/SMTP সেটিংস দিন এবং 'opskit channels check <id> --send-test' চালান (মেইলবক্সে একটি টেস্ট মেইল যাবে)।"
+telegram:
+  title: { en: "Telegram", bn: "টেলিগ্রাম" }
+  items:
+    - who: client
+      en: "In Telegram open @BotFather, send /newbot, choose a name and a username ending in 'bot'. Copy the token it gives you and send it to us privately. The bot belongs to your Telegram account."
+      bn: "টেলিগ্রামে @BotFather খুলুন, /newbot পাঠান, একটি নাম এবং 'bot' দিয়ে শেষ হওয়া ইউজারনেম দিন। যে টোকেন পাবেন তা গোপনে আমাদের পাঠান। বটটি আপনার টেলিগ্রাম অ্যাকাউন্টের।"
+    - who: owner
+      en: "Add the Telegram inbox with the token (the domain must already work over HTTPS), then run 'opskit channels check'."
+      bn: "টোকেন দিয়ে টেলিগ্রাম ইনবক্স যোগ করুন (ডোমেইনে আগে থেকেই HTTPS চালু থাকতে হবে), তারপর 'opskit channels check' চালান।"
+    - who: client
+      en: "Send a message to your bot from your own phone to test."
+      bn: "পরীক্ষার জন্য নিজের ফোন থেকে আপনার বটে একটি মেসেজ পাঠান।"
+whatsapp:
+  title: { en: "WhatsApp (official Cloud API)", bn: "হোয়াটসঅ্যাপ (অফিসিয়াল Cloud API)" }
+  items:
+    - who: client
+      en: "Have (or create) a Meta Business account at business.facebook.com in the business's own name, and complete business verification when Meta asks for it."
+      bn: "ব্যবসার নিজের নামে business.facebook.com-এ একটি Meta Business অ্যাকাউন্ট থাকতে হবে (না থাকলে খুলুন) এবং Meta চাইলে বিজনেস ভেরিফিকেশন সম্পন্ন করুন।"
+    - who: client
+      en: "Choose a phone number that is NOT used in the normal WhatsApp or WhatsApp Business app (delete that account first if it is) and can receive a verification SMS or call."
+      bn: "এমন একটি ফোন নম্বর বেছে নিন যা সাধারণ WhatsApp বা WhatsApp Business অ্যাপে ব্যবহৃত নয় (থাকলে আগে সেই অ্যাকাউন্ট মুছুন) এবং যাতে ভেরিফিকেশন SMS বা কল আসে।"
+    - who: owner
+      en: "With the client, create a Meta developer app (type Business), add the WhatsApp product, add and verify the phone number. Note the Phone number ID and the WhatsApp Business Account ID."
+      bn: "ক্লায়েন্টের সাথে Meta developer অ্যাপ (Business টাইপ) তৈরি করুন, WhatsApp প্রোডাক্ট যোগ করুন, ফোন নম্বর যোগ ও ভেরিফাই করুন। Phone number ID এবং WhatsApp Business Account ID লিখে রাখুন।"
+    - who: client
+      en: "In Business Settings create a System User and a permanent access token with the WhatsApp messaging and management permissions. Give it to us privately."
+      bn: "Business Settings-এ একটি System User ও স্থায়ী অ্যাক্সেস টোকেন তৈরি করুন (WhatsApp মেসেজিং ও ম্যানেজমেন্ট পারমিশনসহ)। টোকেনটি গোপনে আমাদের দিন।"
+    - who: owner
+      en: "Create the WhatsApp inbox (provider whatsapp_cloud) with the number, IDs and token. Copy the webhook URL and verify token shown in the inbox into the Meta app (WhatsApp > Configuration). Run 'opskit channels check'."
+      bn: "নম্বর, আইডি ও টোকেন দিয়ে WhatsApp ইনবক্স (provider whatsapp_cloud) তৈরি করুন। ইনবক্সে দেখানো webhook URL ও verify token Meta অ্যাপে (WhatsApp > Configuration) বসান। 'opskit channels check' চালান।"
+    - who: client
+      en: "Add a payment method in Meta Business: WhatsApp message costs are billed by Meta to YOUR account, not by us. Meta charges per message and changes its rules and prices (check Meta's pricing page; from 1 October 2026 even replies inside the 24-hour window may be charged). You can reply to a customer within 24 hours of their last message; after that only an approved message template can be sent."
+      bn: "Meta Business-এ পেমেন্ট মেথড যোগ করুন: WhatsApp মেসেজের খরচ Meta আপনার অ্যাকাউন্টে বিল করে, আমরা নয়। Meta প্রতি মেসেজে চার্জ করে এবং নিয়ম ও দাম বদলায় (Meta-র প্রাইসিং পেজ দেখুন; ১ অক্টোবর ২০২৬ থেকে ২৪ ঘণ্টার মধ্যের উত্তরেও চার্জ লাগতে পারে)। গ্রাহকের শেষ মেসেজের ২৪ ঘণ্টার মধ্যে উত্তর দেওয়া যায়; এরপর শুধু অনুমোদিত মেসেজ টেমপ্লেট পাঠানো যায়।"
+facebook:
+  title: { en: "Facebook Messenger", bn: "ফেসবুক মেসেঞ্জার" }
+  items:
+    - who: client
+      en: "Make sure the person who will connect is a full ADMIN of the Facebook Page (an editor is not enough)."
+      bn: "যিনি সংযোগ করবেন তিনি যেন ফেসবুক পেজের পূর্ণ ADMIN হন (এডিটর যথেষ্ট নয়)।"
+    - who: owner
+      en: "One time per server: create the Meta app for Messenger, put FB_APP_ID, FB_APP_SECRET and FB_VERIFY_TOKEN in Super Admin settings, set the webhook, and (for pages you do not own) pass Meta's app review."
+      bn: "প্রতি সার্ভারে একবার: Messenger-এর জন্য Meta অ্যাপ তৈরি করুন, Super Admin সেটিংসে FB_APP_ID, FB_APP_SECRET ও FB_VERIFY_TOKEN দিন, webhook সেট করুন এবং (নিজের নয় এমন পেজের জন্য) Meta app review পাস করুন।"
+    - who: client
+      en: "Log in with Facebook in the connect screen and allow all the permissions it asks for."
+      bn: "সংযোগ স্ক্রিনে ফেসবুক দিয়ে লগইন করুন এবং চাওয়া সব পারমিশন অনুমোদন করুন।"
+instagram:
+  title: { en: "Instagram", bn: "ইনস্টাগ্রাম" }
+  items:
+    - who: client
+      en: "The Instagram account must be a Professional (Business or Creator) account linked to the Facebook Page, and you must be an admin of that Page."
+      bn: "ইনস্টাগ্রাম অ্যাকাউন্টটি Professional (Business বা Creator) হতে হবে, ফেসবুক পেজের সাথে যুক্ত থাকতে হবে এবং আপনি সেই পেজের অ্যাডমিন হতে হবে।"
+    - who: owner
+      en: "One time per server: Instagram app settings (INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, INSTAGRAM_VERIFY_TOKEN, or the Facebook ones) in Super Admin, webhook set, Meta app review passed."
+      bn: "প্রতি সার্ভারে একবার: Super Admin-এ Instagram অ্যাপ সেটিংস (INSTAGRAM_APP_ID, INSTAGRAM_APP_SECRET, INSTAGRAM_VERIFY_TOKEN বা ফেসবুকের গুলো), webhook সেট এবং Meta app review পাস।"
+    - who: client
+      en: "Connect through Chatwoot's Instagram screen and allow the permissions."
+      bn: "Chatwoot-এর Instagram স্ক্রিন দিয়ে সংযোগ করুন এবং পারমিশন অনুমোদন করুন।"
+api:
+  title: { en: "API inbox (custom connections)", bn: "API ইনবক্স (কাস্টম সংযোগ)" }
+  items:
+    - who: owner
+      en: "Create the API inbox; give the developer the inbox identifier and the public API documentation. Run 'opskit channels check' (it sends and removes a test message)."
+      bn: "API ইনবক্স তৈরি করুন; ডেভেলপারকে inbox identifier ও পাবলিক API ডকুমেন্টেশন দিন। 'opskit channels check' চালান (এটি একটি টেস্ট মেসেজ পাঠিয়ে মুছে দেয়)।"

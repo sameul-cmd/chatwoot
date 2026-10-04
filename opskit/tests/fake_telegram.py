@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Pretend Telegram Bot API for tests. Usage: fake_telegram.py PORT_FILE LOG_FILE
+"""Pretend Telegram Bot API for tests. Usage: fake_telegram.py PORT_FILE LOG_FILE [WEBHOOK_INFO_JSON]
 Writes the chosen port to PORT_FILE, appends every sendMessage as one JSON line to LOG_FILE.
 A token containing 'badtoken' gets HTTP 401; 'flaky' gets HTTP 500."""
 import json
@@ -8,6 +8,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs
 
 PORT_FILE, LOG_FILE = sys.argv[1], sys.argv[2]
+WEBHOOK_INFO = sys.argv[3] if len(sys.argv) > 3 else None  # optional JSON file served for getWebhookInfo
 
 
 class H(BaseHTTPRequestHandler):
@@ -20,6 +21,15 @@ class H(BaseHTTPRequestHandler):
         self.send_response(code)
         self.end_headers()
         self.wfile.write(json.dumps({"ok": code == 200}).encode())
+
+    def do_GET(self):
+        code = 401 if "badtoken" in self.path else 200
+        body = {"ok": False} if code != 200 else {"ok": True, "result": {}}
+        if code == 200 and self.path.endswith("/getWebhookInfo") and WEBHOOK_INFO:
+            body = json.loads(open(WEBHOOK_INFO).read())
+        self.send_response(code)
+        self.end_headers()
+        self.wfile.write(json.dumps(body).encode())
 
     def log_message(self, *a):
         pass
