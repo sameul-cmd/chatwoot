@@ -17,7 +17,7 @@
 | Production compose + CE image | official compose, `-ce` tag | works | `v4.18.0-ce` tag exists. Compose also starts a pointless `base` container (it is the YAML anchor, harmless). Health route: `GET /api` -> `{"version","queue_services","data_services"}` |
 | Super Admin / account creation | `rails runner` | works | Account, SuperAdmin user, AccountUser(administrator); user has `access_token` for the Application API |
 | Application API | token header `api_access_token` | works | create inbox, agent bot, set_agent_bot, conversations, messages, labels, toggle_status |
-| Website widget inbox | API create | partly | Inbox created; the widget uses `/api/v1/widget` + JWT, not the public API. Browser round trip not yet tested |
+| Website widget inbox + real widget in a browser | headless Chromium, page served from localhost | works | Bubble -> "Start Conversation" -> message sent -> conversation created `pending` with bot assigned. Widget also posts its own "Give the team a way to reach you / Get notified by email" template messages (message_type `template`, 3) and these reach the bot webhook as `message_updated`/`message_created` - aibot must ignore them. Widget from a non-localhost fake domain was blocked by browser CORS (test artifact only) |
 | API-channel inbox + public API | `/public/api/v1/inboxes/<inbox_identifier>/contacts/...` | works | used for scripted customer messages |
 | Agent Bot (webhook) | listener `explore/listener.py` | works | see `docs/captures/agent-bot-message_created.json` and section 6 |
 | Bot reply | `POST /api/v1/accounts/1/conversations/:id/messages` with the bot's `access_token`, `message_type: outgoing` | works | 200 |
@@ -26,7 +26,12 @@
 | Attachments (image) | 70-byte PNG via public API multipart | works | stored in `storage_data`, opens after restore |
 | Backup -> restore into fresh stack | `pg_dump -Fc` + tar of storage volume; restore into project `cwrest` on port 3001 | works | 52 conversations on both; login OK; attachment byte-identical |
 | Telegram, email (IMAP/SMTP), WhatsApp Cloud API, Facebook/Instagram | - | NOT TESTED | needs owner accounts; to be done on the owner's device |
-| Other UI features (macros, automations, teams, help center, campaigns, reports, CSAT, Bengali UI), Super Admin console, mobile app | - | NOT YET TESTED | browser tour pending |
+| Dashboard, Settings (inboxes, agents, teams, labels, custom attributes, automation, bots, macros, canned responses, integrations), Reports, Contacts, Campaigns, Help Center | headless login + screenshots (`explore/shots/`, git-ignored) | works | all pages load, no JS errors. Help Center opens "create portal" (works, empty) |
+| Super Admin console `/super_admin` | same credentials | works | Dashboard counts, Accounts, Users, Agent Bots, Platform Apps, Sidekiq Dashboard, Instance Health, Push Diagnostics - Sidekiq Dashboard and Instance Health are useful for Phase 4 monitoring |
+| Integrations available in CE | Settings -> Integrations | listed | Webhooks, Dashboard Apps, OpenAI (api_key only), Dialogflow, Google Translate, Cloudflare RealtimeKit. No Captain, no Slack/Linear etc. shown (need env keys) |
+| First-run onboarding | fresh DB | works | `db:chatwoot_prepare` sets Redis flag `CHATWOOT_INSTALLATION_ONBOARDING`; until completed every page redirects to `/installation/onboarding` (public form that creates the Super Admin + account, with a pre-ticked newsletter box). Kit must complete it immediately via script (or delete the flag after creating admin by `rails runner`) |
+| Bengali UI | app ships `bn` locale (57 locales total) | NOT CONFIRMED | switching language was not confirmed in the headless test; needs a manual check on the owner's device |
+| Macros, automation rule creation, teams, campaigns, CSAT, mobile app, ngrok | - | NOT TESTED | pages open; creating items by hand deferred (Phase 7 packs will create them via API) |
 
 ## 3. Performance on this machine
 | Task | Input size | Time | Notes |
@@ -57,6 +62,7 @@ Mostly yes. Answers to *(verify)* items so far:
 - Handoff: bot token `POST /conversations/:id/toggle_status {"status":"open"}` -> status open, bot assignee cleared; label via `POST /conversations/:id/labels`. Team assignment call not yet tested.
 - Payload sample: `docs/captures/agent-bot-message_created.json`.
 **Mismatch found:** SPEC 13.1 private-network webhook (see section 5) - needs `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true`. Not a blocker; ADR-012.
+- **BYOK for built-in AI assist:** the OpenAI integration only asks for an `api_key` in the UI, but the code reads an installation setting `CAPTAIN_OPEN_AI_ENDPOINT` (lib/integrations/llm_base_service.rb) so a custom OpenAI-compatible endpoint may be possible without patching (not tested). Our bot does not depend on it.
 Still open: the other *(verify)* items (sidekiq health method, channel health fields, Reports API, enterprise-free image proof) belong to later steps.
 
 ## 7. Questions for the owner (only if blocked or unclear)

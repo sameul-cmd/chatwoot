@@ -8,7 +8,7 @@
 ## Phases
 | Phase | Name | Status | Verified |
 |---|---|---|---|
-| 0 | Fork, set up & explore Chatwoot | In progress (core done: install, API, agent-bot capture, backup/restore, RAM) | — |
+| 0 | Fork, set up & explore Chatwoot | Done on cloud sandbox; owner-account tests (Telegram, email, WhatsApp, Meta) and Bengali UI check pending on owner device | cloud-verified 2026-10-04 |
 | 1 | Opskit foundation | Not started | — |
 | 2 | Client deployment kit | Not started | — |
 | 3 | Backups & restore | Not started | — |
@@ -29,9 +29,8 @@
 - Agent rules: `.claude/CLAUDE.md` (force-added; upstream .gitignore ignores `.claude/`). Skills: `.claude/skills/`.
 - Anything needing the owner's accounts (Telegram, WhatsApp, email, VPS) is coded here and proven later on the owner's device; see `docs/HANDOVER.md` (created as we go).
 
-## Phase 0 remaining
-- Browser tour (widget round trip, Super Admin console, macros/automations/teams/help center/reports, Bengali UI) - can be done here with a headless browser.
-- Owner-side later: Telegram, email, WhatsApp, Facebook/Instagram, mobile app.
+## Phase 0 - owner-side items (do on your own device later)
+- Telegram, email (IMAP/SMTP), WhatsApp Cloud API test number, Facebook/Instagram, mobile app via ngrok, Bengali UI check.
 
 ## Known issues
 <!-- Bugs or gaps found outside current task scope. -->
