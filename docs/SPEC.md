@@ -98,7 +98,7 @@ Enterprise features without a license (Captain, SLA, audit logs, branding remova
 | Email | Client SMTP (or owner's transactional provider) for notifications/password reset; email inbox via IMAP/SMTP or forwarding |
 | Backups | `pg_dump` + tar of storage volume + `age`-encrypted `.env` + `rclone` off-server |
 | Monitoring | Shared ops-hub (Activepieces flows + Uptime Kuma), UptimeRobot for the hub |
-| aibot | Python 3.12, FastAPI, httpx, pydantic, rank-bm25 (retrieval), SQLite (per-client audit/cache), pytest, ruff, mypy; LLM: Gemini (client: paid tier) or OpenAI/client-owned key |
+| aibot | Python 3.12, FastAPI, httpx, pydantic, rank-bm25 (retrieval), SQLite (per-client audit/cache), pytest, ruff, mypy; LLM: **owner-supplied key (BYOK) through any OpenAI-compatible endpoint** (ADR-011); Gemini/OpenAI-direct are just presets of the same adapter |
 | Laptop | Windows + WSL2 Ubuntu + Docker Desktop, 12 GB RAM (WSL ~7–8 GB) |
 | CI | GitHub Actions: `opskit-ci.yml` (shellcheck, bats, aibot tests), `opskit-image.yml` (multi-arch CE images → GHCR) |
 
@@ -117,7 +117,7 @@ Enterprise features without a license (Captain, SLA, audit logs, branding remova
 ---
 
 ## 6. Client registry
-`opskit/clients/<client_id>/client.yaml`: `client_id`, `name`, `contact`, `timezone`, `languages: [bn, en]`, `domain` (e.g. `chat.client.com`), `host` {name, ip, ssh_user}, `install` {`mode: dedicated` (V1) | `shared_accounts` (V2), `image`, `tag`}, `accounts[]` {`account_id`, `name`} (V1: exactly one), `sizing` {rails/sidekiq memory limits, sidekiq concurrency}, `smtp` {host, port, user, sender} (password in `.env` only), `storage` {`local|s3`}, `channels[]` {type, name, status}, `pack` (industry id), `bot` {enabled, inboxes[], provider, model, handoff_team}, `alerts` {channels, targets, quiet_hours}, `support` {hours, response_hours: 12, outage_hours: 2}, `backup` {schedule, retention_local: 14, retention_remote: 30, remote}, `report` {recipients, day_of_month: 1}, `status`.
+`opskit/clients/<client_id>/client.yaml`: `client_id`, `name`, `contact`, `timezone`, `languages: [bn, en]`, `domain` (e.g. `chat.client.com`), `host` {name, ip, ssh_user}, `install` {`mode: dedicated` (V1) | `shared_accounts` (V2), `image`, `tag`}, `accounts[]` {`account_id`, `name`} (V1: exactly one), `sizing` {rails/sidekiq memory limits, sidekiq concurrency}, `smtp` {host, port, user, sender} (password in `.env` only), `storage` {`local|s3`}, `channels[]` {type, name, status}, `pack` (industry id), `bot` {enabled, inboxes[], handoff_team, `llm` {`base_url`, `api_key_env`, `model`, `effort`: `none|low|medium|high|max`, `effort_param`, `max_output_tokens`}}, `alerts` {channels, targets, quiet_hours}, `support` {hours, response_hours: 12, outage_hours: 2}, `backup` {schedule, retention_local: 14, retention_remote: 30, remote}, `report` {recipients, day_of_month: 1}, `status`.
 
 ---
 
@@ -149,7 +149,7 @@ Runbooks in `docs/runbooks/`: `website-widget.md`, `email.md` (IMAP/SMTP + forwa
 3. **Answering:** detect reply language (Bangla script, English, banglish → Bangla or English per client default); retrieve top-k; LLM prompt restricted to retrieved snippets + business profile; must return JSON `{answer, confidence, used_ids, handoff}`; answer only if confidence ≥ `bot.min_confidence` (default 0.7) and at least one snippet used.
 4. **Handoff:** on low confidence, off-topic, human request ("agent", "human", "মানুষ", "এজেন্ট", configurable), complaint/anger keywords, `max_bot_turns` (default 3), or LLM error → post handoff message (bn/en), set conversation to open for humans, add label `ai-handoff`, assign team per config *(verify API calls)*.
 5. **Policy guardrails (WhatsApp 2026):** business topics only; first bot message discloses automation (e.g. "I'm {business}'s automated assistant"); never claims to be human; no prices/promises unless present in KB; refuses general questions with an offer to connect a person; replies only to inbound messages.
-6. **Data:** LLM key policy — client stacks use paid-tier Gemini or client-owned keys (flag `AIBOT_LLM_TIER_PAID=true` required); demo stack may use free tier with demo data. SQLite audit (question, answer, used KB ids, confidence, handoff reason) kept `audit_days: 30`, stays on the host; logs contain no message text.
+6. **Data / LLM (BYOK, ADR-011):** the owner supplies the key and endpoint; aibot calls any OpenAI-compatible `/chat/completions` API (custom `base_url`). `opskit llm models <client>` lists the endpoint's `/models` and lets the operator pick one (writes `bot.llm.model`); `opskit llm effort <client>` sets reasoning effort `none|low|medium|high|max`, sent as `reasoning_effort` (name configurable via `effort_param`; value mapping configurable per endpoint because "max" is not universal; unsupported → fall back to the highest accepted value and log a warning, never fail the reply). Default effort `medium` (chat latency); `max` is selectable. Key lives in the env var named by `api_key_env`, never in git. Client-data rule: the key must be paid-tier/owner-owned (flag `AIBOT_LLM_TIER_PAID=true`); free tiers only for demo data. SQLite audit (question, answer, used KB ids, confidence, handoff reason) kept `audit_days: 30`, stays on the host; logs contain no message text.
 7. **Evaluation gate:** `aibot eval <client>` runs the client's test set (≥ 20 questions incl. off-topic, Bangla, banglish, human request) and reports correct / handed-off / wrong; go-live requires 0 wrong prices/policies and ≥ 90% correct-or-handed-off (roadmap: 20 test questions, correct handoff when unsure).
 8. **Ops:** `/health`, metrics (answers, handoffs, errors, latency) pushed to ops-hub daily; kill switch `bot.enabled: false` detaches the bot without redeploying Chatwoot.
 
@@ -237,5 +237,5 @@ Practice production run on a real VPS (Oracle Always Free arm64 with our image i
 ## Appendix B — Open questions for the owner
 1. Business name and demo domain (e.g. `chat.yourbrand.com`) for the demo instance?
 2. Do you have (or will you create) a Meta developer account for WhatsApp/Facebook testing?
-3. Default LLM for client bots: Gemini paid tier, or client-owned OpenAI/Gemini keys?
+3. Default LLM for client bots: **decided 4 Oct 2026 — owner BYOK via custom OpenAI-compatible endpoint, model picker, effort up to max (ADR-011).**
 4. Which industry pack first (f-commerce recommended)?

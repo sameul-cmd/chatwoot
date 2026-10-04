@@ -17,7 +17,7 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | SMTP host/port/user/password, sender | host `.env` | client or owner provider |
 | Meta app ids/secrets, WhatsApp verify tokens | host `.env` / Chatwoot UI | client-owned Meta apps (verify names) |
 | `AIBOT_CHATWOOT_URL`, `AIBOT_BOT_TOKEN`, `AIBOT_WEBHOOK_SECRET` | aibot env | bot token from agent bot registration |
-| `AIBOT_LLM_PROVIDER`, `AIBOT_LLM_MODEL`, `AIBOT_LLM_API_KEY`, `AIBOT_LLM_TIER_PAID` | aibot env | client mode requires paid tier or client key |
+| `AIBOT_LLM_BASE_URL`, `AIBOT_LLM_MODEL`, `AIBOT_LLM_EFFORT` (none/low/medium/high/max), `AIBOT_LLM_EFFORT_PARAM`, `AIBOT_LLM_API_KEY`, `AIBOT_LLM_TIER_PAID` | aibot env | owner BYOK, any OpenAI-compatible endpoint (ADR-011); client mode requires paid/owner key |
 | `OPSKIT_HUB_URL`, `OPSKIT_HUB_TOKEN`, `OPSKIT_TELEGRAM_FALLBACK_*` | host agent config | shared ops-hub + fallback |
 | age public key | `opskit/keys/owner.age.pub` | private key offline only |
 

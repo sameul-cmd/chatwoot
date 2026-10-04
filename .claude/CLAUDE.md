@@ -95,7 +95,7 @@ Update PROGRESS; ADR for architecture choices; ledger for upstream edits; conven
 - Hosts: SSH keys only, ufw 22/80/443, Postgres/Redis/aibot never published.
 - Super Admin credentials go to the owner's password manager; never logged.
 - Logs and alerts never contain message text, customer phone numbers or emails; error excerpts ≤ 300 chars without PII.
-- Client LLM calls only with paid-tier or client-owned keys (`AIBOT_LLM_TIER_PAID=true` or client key); free tier only for demo data.
+- LLM = owner BYOK via one OpenAI-compatible adapter (`base_url`, `api_key_env`, model picker, effort none..max; ADR-011). Client LLM calls only with paid-tier or owner/client-owned keys (`AIBOT_LLM_TIER_PAID=true` or client key); free tier only for demo data.
 - Community Edition only: CE image tags, never touch `enterprise/`, no license keys, keep "Powered by Chatwoot".
 - Official WhatsApp Cloud API only; never unofficial QR-code connectors.
 
