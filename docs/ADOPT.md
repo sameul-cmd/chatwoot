@@ -15,7 +15,20 @@ Branch: claude/wizardly-babbage-ui2rpa  (work on this branch only; never push an
 Do not trust your memory of this project: trust the files.
 ```
 
-If the AI cannot use git or run commands (a plain chat window), give it the contents of `docs/ADOPT.md`, `docs/PROGRESS.md` and the current phase file by pasting them; it can still plan and write documents, but it cannot run the checks.
+### How each tool picks this up
+The repo contains small auto-loaded rule files that point to this guide, so for most tools you only have to open the folder and say **"adopt this project"**. (Chatwoot's own root `AGENTS.md` / `CLAUDE.md` are upstream's and do not describe our work: our rule files say so.)
+
+| Tool | What it loads by itself | What you do |
+|---|---|---|
+| **Kilo Code** | `.kilocode/rules/` and `.kilo/rules/` (+ `/resume`, `/start-phase`, `/next-task`, `/verify-phase` workflows in `.kilocode/workflows/`) | Clone, open the folder, start a chat, paste the box above (or just type "adopt this project"); use the slash workflows to continue |
+| **Cursor** | `.cursor/rules/` (always on) | Same |
+| **Cline / Roo Code** | `.clinerules/`, `.roo/rules/` | Same |
+| **GitHub Copilot** | `.github/copilot-instructions.md` | Same |
+| **Gemini CLI** | `GEMINI.md` | Same |
+| **Codex / Windsurf / others** | they read the root `AGENTS.md` (Chatwoot's), which does not know our project | **Always paste the box above** |
+| **A plain chat window** (no git, no commands) | nothing | paste the contents of `docs/ADOPT.md`, `docs/PROGRESS.md` and the current phase file; it can plan and write documents but cannot run the checks |
+
+The tool needs to be able to run shell commands and Docker for building and verifying. Model quality matters: pick the strongest coding model your tool offers, because this project has many small rules (verify before claiming, never print secrets, never edit Chatwoot's files).
 
 ## 2. What this project is (one paragraph)
 A sellable "AI inbox service" for small businesses (Bangladesh first). The owner installs **one Chatwoot Community Edition per client** (open source support inbox: website chat, email, Telegram, WhatsApp, Facebook, Instagram) and adds our kit on top: **opskit** (Bash tools: deploy, backup/restore, monitoring with Telegram alerts, safe upgrades, channel checks, industry starter packs, reports) and **aibot** (Python service: an AI first-reply bot that answers only from the client's own FAQ in Bangla/English and hands off to humans). The repo is a fork of `chatwoot/chatwoot` pinned to release **v4.18.0**. Our code lives only in `opskit/`, `aibot/`, `docs/`, `.claude/`, `explore/` and `.github/workflows/opskit-*.yml`; **every other file is Chatwoot's and must not be edited** (a test enforces it).
@@ -71,7 +84,7 @@ Non-technical / semi-technical, works from several laptops, wants to sell this a
 7. **Commit and push** to the branch; summarise for the owner in plain words with their next steps.
 
 ## 8. Map of the repo (ours)
-`docs/SPEC.md` source of truth · `docs/PROGRESS.md` status and reports · `docs/DECISIONS.md` ADRs · `docs/ASSUMPTIONS.md` · `docs/TECH_ARCHITECTURE.md` · `docs/ENVIRONMENT.md` · `docs/EXPLORATION_REPORT.md` (verified Chatwoot facts) · `docs/runbooks/` (operator how-tos) · `docs/tasks/` (phase plans) · `opskit/{bin,lib,agent,templates,schema,data,packs,tests}` · `aibot/{src/aibot,tests,demo}` · `.claude/` (Claude-Code-specific copies of the rules and commands; other tools can ignore it).
+`docs/SPEC.md` source of truth · `docs/PROGRESS.md` status and reports · `docs/DECISIONS.md` ADRs · `docs/ASSUMPTIONS.md` · `docs/TECH_ARCHITECTURE.md` · `docs/ENVIRONMENT.md` · `docs/EXPLORATION_REPORT.md` (verified Chatwoot facts) · `docs/runbooks/` (operator how-tos) · `docs/tasks/` (phase plans) · `opskit/{bin,lib,agent,templates,schema,data,packs,tests}` · `aibot/{src/aibot,tests,demo}` · `.claude/` (Claude Code's own copy of the rules and slash commands) · `.kilocode/`, `.kilo/`, `.cursor/`, `.clinerules/`, `.roo/`, `GEMINI.md`, `.github/copilot-instructions.md` (tiny auto-loaded pointers to this file for other tools).
 Key commands: `opskit/bin/opskit help` lists everything (client new/deploy, backup, restore, monitor, upgrade, channels, pack, llm, bot, selftest).
 
 ## 9. Things only the owner can do (never block on these; keep a list)

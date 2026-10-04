@@ -21,7 +21,7 @@ done
   exit 3
 }
 
-ALLOWED='^(opskit/|aibot/|docs/|explore/|\.claude/|README-START-HERE\.md$|\.github/workflows/opskit-[^/]+\.yml$)'
+ALLOWED='^(opskit/|aibot/|docs/|explore/|\.claude/|\.kilo/|\.kilocode/|\.cursor/|\.clinerules/|\.roo/|GEMINI\.md$|\.github/copilot-instructions\.md$|README-START-HERE\.md$|\.github/workflows/opskit-[^/]+\.yml$)'
 bad="$(git -C "$ROOT" diff --name-only "${PIN}" HEAD | grep -Ev "$ALLOWED" || true)"
 if [ -n "$bad" ]; then
   echo "files outside our paths changed vs ${PIN}:" >&2
