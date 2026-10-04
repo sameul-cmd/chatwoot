@@ -37,4 +37,16 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
-<!-- Output of /verify-phase goes here. -->
+### Phase 1 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| `opskit/bin/check` passes locally | PASS | ALL CHECKS PASSED: shellcheck, bats (18 tests), aibot ruff + mypy --strict + pytest (17 tests); a deliberately broken script made it fail (exit 1) |
+| `opskit/bin/check` passes in CI | NOT VERIFIED | `.github/workflows/opskit-ci.yml` written (YAML parsed, not run). Needs enabling on GitHub. `doctor` test assumes docker/yq on the runner (GitHub ubuntu has both) |
+| Invalid configs fail with field messages | PASS | bats: missing timezone, bad domain, bad `bot.llm.effort`, `min_confidence` 1.5, bad pack industry each name the field; `shared_accounts` -> "V2" message |
+| `git diff <pinned-tag> --stat` lists only our paths | PASS | `opskit/lib/check_upstream_paths.sh` (also a bats test); proven to catch a stray `Gemfile` edit; 0 files in `enterprise/` changed |
+| BYOK config (ADR-011) | PASS | schema + pydantic: effort none..max, `api_key_env`, paid-tier rule, key never in repr/JSON/health (tests) |
+| `opskit selftest` | N/A | placeholder until Phase 2 (exit 3) |
+Leftover scan: no TODO/eval, all scripts `set -euo pipefail`/`-uo pipefail` (check script intentionally continues), no tokens in code, no pycache/.venv tracked.
+Differences from SPEC to note: schema validation uses a small Python helper (A-002); pack `review_required` default applied in Phase 7 (A-003); tag `v4.18.0` could not be pushed to the fork, so the path check falls back to the pinned commit SHA.
+Not done on purpose: no LLM calls, no webhook, no docker integration tests (later phases).
+
