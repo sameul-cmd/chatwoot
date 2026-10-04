@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 3 - Backups & restore (done, verified locally)
-- **Current task:** `/start-phase` for Phase 4 (Monitoring & alerts) when the owner says go
+- **Current phase:** Phase 4 - Monitoring & alerts (planned)
+- **Current task:** Phase 4 plan written (`docs/tasks/phase-4.md`); waiting for owner approval of its 7 open questions (new secret involved), then start 4.1
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -12,7 +12,7 @@
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
-| 4 | Monitoring & alerts via shared ops-hub | Not started | — |
+| 4 | Monitoring & alerts via shared ops-hub | Planned (task file ready, awaiting owner approval) | — |
 | 5 | Safe upgrades | Not started | — |
 | 6 | Channel runbooks & checkers | Not started | — |
 | 7 | Industry starter packs bn + en | Not started | — |
