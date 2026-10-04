@@ -49,7 +49,6 @@ def answer_for(entries: list[tuple[str, str]], customer: str, lang: str) -> dict
             best, best_score = (cid, content), score
     if not best:
         return {"answer": "", "confidence": 0.2, "used_ids": [], "handoff": True, "upset": False}
-    lang = "bn" if re.search("[ঀ-৿]", customer) else "en"
     match = re.search(rf"A \({lang}\): (.*)", best[1]) or re.search(r"A \(\w+\): (.*)", best[1])
     text = match.group(1).strip() if match else best[1]
     if "INVENT-A-PRICE" in customer:
