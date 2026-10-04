@@ -65,11 +65,11 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Goal:** the webhook calls an ordered list of handlers (V1: the answer handler only, extension point for V2 add-ons); `POST /admin/reload` (internal network only) reloads the KB without restart; `/health` as today plus KB size; metrics counters (answered, handed off by reason, errors, latency) and the unanswered-questions list kept in the audit database for Phase 9; kill-switch awareness (`bot.enabled: false` answers 200 and does nothing).
 - **Acceptance:** pytest; metrics numbers match a scripted conversation set exactly.
 
-### [ ] 8.7 — opskit wiring: `bot enable | disable | status | reload`
+### [x] 8.7 — opskit wiring: `bot enable | disable | status | reload`
 - **Goal:** `lib/bot.sh`: `enable` (idempotent) creates the agent bot via the API with the aibot webhook URL (`http://aibot:8000/webhook/<secret>`), stores the bot token and the signing secret in `clients/<id>/bot.env` (mode 600, git-ignored, merged into `aibot.env` by render), attaches it to the chosen inboxes, restarts only the aibot container, and runs a live check; `disable` detaches everywhere and sets the kill switch; `status` shows attached inboxes, health, counts; `reload` calls the KB reload. `render` mounts `kb/` (read-only) and a rendered bot config. A restored stack just needs `bot enable` again (documented).
 - **Acceptance:** bats with the fake Chatwoot API; second `enable` changes nothing; `disable` leaves no inbox attached; no token printed.
 
-### [ ] 8.8 — `opskit llm models | model | effort | set-key`
+### [x] 8.8 — `opskit llm models | model | effort | set-key`
 - **Goal:** replaces the placeholder: `llm models <id>` lists the endpoint's `/models` (needs the key), `llm model <id> <name>` and `llm effort <id> none|low|medium|high|max` write to `client.yaml bot.llm`, `llm set-key <id> [--paid]` stores the key from a hidden prompt or the environment in `clients/<id>/aibot-llm.env` (mode 600) and records the paid-tier statement you make; re-render + restart aibot. Client mode still refuses to start without paid-tier or an owner/client key.
 - **Acceptance:** bats with a fake `/models`; key never printed; invalid effort rejected with the valid values.
 

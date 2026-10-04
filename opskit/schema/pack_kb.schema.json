@@ -71,6 +71,14 @@
             "type": "boolean",
             "default": true,
             "description": "Bangla text stays true until the owner (native speaker) approves it."
+          },
+          "aliases": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Other ways customers write the question, e.g. Banglish: 'delivery kobe'."
           }
         }
       }

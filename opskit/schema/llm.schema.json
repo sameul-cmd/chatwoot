@@ -4,7 +4,10 @@
   "title": "BYOK LLM settings (ADR-011): any OpenAI-compatible endpoint",
   "type": "object",
   "additionalProperties": false,
-  "required": ["base_url", "model"],
+  "required": [
+    "base_url",
+    "model"
+  ],
   "properties": {
     "base_url": {
       "type": "string",
@@ -17,9 +20,18 @@
       "default": "AIBOT_LLM_API_KEY",
       "description": "Name of the environment variable holding the key. The key itself never goes in this file."
     },
-    "model": { "type": "string", "minLength": 1 },
+    "model": {
+      "type": "string",
+      "minLength": 1
+    },
     "effort": {
-      "enum": ["none", "low", "medium", "high", "max"],
+      "enum": [
+        "none",
+        "low",
+        "medium",
+        "high",
+        "max"
+      ],
       "default": "medium",
       "description": "Reasoning effort. 'max' is mapped per endpoint (see ASSUMPTIONS A-001)."
     },
@@ -29,6 +41,16 @@
       "default": "reasoning_effort",
       "description": "Request field that carries the effort value."
     },
-    "max_output_tokens": { "type": "integer", "minimum": 16, "maximum": 32000, "default": 800 }
+    "max_output_tokens": {
+      "type": "integer",
+      "minimum": 16,
+      "maximum": 32000,
+      "default": 800
+    },
+    "paid_tier": {
+      "type": "boolean",
+      "default": false,
+      "description": "The owner states that this key is paid-tier or owned by the owner/client (SPEC 13.6). Real client data is only sent when true."
+    }
   }
 }

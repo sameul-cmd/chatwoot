@@ -4,23 +4,134 @@
   "title": "Per-client aibot configuration (bot.yaml)",
   "type": "object",
   "additionalProperties": false,
-  "required": ["llm"],
+  "required": [
+    "llm"
+  ],
   "properties": {
-    "enabled": { "type": "boolean", "default": true },
-    "inboxes": { "type": "array", "items": { "type": "integer", "minimum": 1 }, "default": [] },
-    "handoff_team": { "type": "string" },
-    "default_language": { "enum": ["bn", "en"], "default": "bn" },
-    "min_confidence": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.7 },
-    "max_bot_turns": { "type": "integer", "minimum": 1, "maximum": 20, "default": 3 },
-    "audit_days": { "type": "integer", "minimum": 1, "maximum": 365, "default": 30 },
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "inboxes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      },
+      "default": []
+    },
+    "handoff_team": {
+      "type": "string"
+    },
+    "default_language": {
+      "enum": [
+        "bn",
+        "en"
+      ],
+      "default": "bn"
+    },
+    "min_confidence": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1,
+      "default": 0.7
+    },
+    "max_bot_turns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 20,
+      "default": 3
+    },
+    "audit_days": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365,
+      "default": 30
+    },
     "handoff_keywords": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "en": { "type": "array", "items": { "type": "string", "minLength": 1 } },
-        "bn": { "type": "array", "items": { "type": "string", "minLength": 1 } }
+        "en": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
       }
     },
-    "llm": { "$ref": "https://opskit.local/schema/llm.schema.json" }
+    "llm": {
+      "$ref": "https://opskit.local/schema/llm.schema.json"
+    },
+    "upset_words": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "bn": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "messages": {
+      "type": "object",
+      "description": "Override the bot's fixed messages: key (disclosure, handoff, off_topic, upset) -> {bn, en}. {business} is replaced by the client name.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "bn": {
+            "type": "string",
+            "minLength": 1
+          },
+          "en": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "messages_bn_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "The owner has proofread the default Bangla messages; until then a real client gets them in English."
+    },
+    "embeddings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "model"
+      ],
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1
+        },
+        "min_similarity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.35
+        }
+      }
+    }
   }
 }

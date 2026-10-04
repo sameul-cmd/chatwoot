@@ -90,16 +90,26 @@ SMTP_AUTHENTICATION=${SMTP_AUTH:-plain}"
     export HTTP_BIND HTTPS_BIND FRONTEND_URL CADDY_SITE CADDY_TLS SMTP_HOST SMTP_PORT SMTP_AUTH SMTP_STARTTLS \
       MAILPIT_SERVICE SMTP_USER SMTP_SENDER SMTP_DOMAIN SMTP_PASSWORD SMTP_AUTH_LINES
 
-    # aibot: non-secret LLM settings from client.yaml; the key itself is added in Phase 8 (never in this file).
+    # aibot: settings from client.yaml `bot:`; the LLM key and the Chatwoot bot token come from files the operator
+    # commands wrote (llm.env, bot.env: mode 600, never in git). Local practice stacks run in demo mode.
     AIBOT_LLM_LINES=""
     if [ "$(_y '.bot.enabled // false' "$cfg")" = "true" ]; then
-      AIBOT_LLM_LINES="AIBOT_LLM_BASE_URL=$(_y '.bot.llm.base_url' "$cfg")
+      AIBOT_LLM_LINES="AIBOT_CONFIG=/config/bot.yaml
+AIBOT_BUSINESS_NAME=$(_y '.name' "$cfg")
+AIBOT_LLM_BASE_URL=$(_y '.bot.llm.base_url' "$cfg")
 AIBOT_LLM_MODEL=$(_y '.bot.llm.model' "$cfg")
 AIBOT_LLM_EFFORT=$(_y '.bot.llm.effort // "medium"' "$cfg")
 AIBOT_LLM_EFFORT_PARAM=$(_y '.bot.llm.effort_param // "reasoning_effort"' "$cfg")
-AIBOT_LLM_TIER_PAID=true"
+AIBOT_LLM_TIER_PAID=$(_y '.bot.llm.paid_tier // false' "$cfg")"
     fi
-    export AIBOT_LLM_LINES
+    AIBOT_MODE=client
+    [ "$target" != "local" ] || AIBOT_MODE=demo
+    for extra in bot.env llm.env; do
+      [ ! -f "$dir/$extra" ] || AIBOT_LLM_LINES="${AIBOT_LLM_LINES}
+$(cat "$dir/$extra")"
+    done
+    export AIBOT_LLM_LINES AIBOT_MODE
+    mkdir -p "$dir/kb"
 
     stack="$dir/stack"
     mkdir -p "$stack"
@@ -115,7 +125,16 @@ AIBOT_LLM_TIER_PAID=true"
       CLIENT_ID SECRET_KEY_BASE FRONTEND_URL RAILS_MAX_THREADS SIDEKIQ_CONCURRENCY POSTGRES_PASSWORD REDIS_PASSWORD \
       STORAGE_SERVICE SMTP_SENDER SMTP_DOMAIN SMTP_HOST SMTP_PORT SMTP_AUTH_LINES SMTP_STARTTLS
     render_template "$OPSKIT_ROOT/templates/aibot.env.tmpl" "$stack/aibot.env.tmp" \
-      CLIENT_ID AIBOT_WEBHOOK_SECRET AIBOT_LLM_LINES
+      CLIENT_ID AIBOT_WEBHOOK_SECRET AIBOT_LLM_LINES AIBOT_MODE
+    # the bot's own settings file (bind-mounted read-only); an empty file when the bot is not set up
+    (umask 077
+      if [ "$(_y '.bot.enabled // false' "$cfg")" = "true" ]; then
+        yq -y '.bot | del(.llm.paid_tier)' "$cfg" >"$stack/bot.yaml.tmp"
+      else
+        printf '# the bot is not set up for this client\n' >"$stack/bot.yaml.tmp"
+      fi)
+    chmod 644 "$stack/bot.yaml.tmp" # no secrets in it (the key and tokens are in llm.env / bot.env); the bot runs as a normal user
+    mv -f "$stack/bot.yaml.tmp" "$stack/bot.yaml"
     render_template "$OPSKIT_ROOT/templates/Caddyfile.tmpl" "$stack/Caddyfile" CLIENT_ID CADDY_SITE CADDY_TLS
     export TIMEZONE BACKUP_SCHEDULE OPSKIT_BIN
     TIMEZONE="$(_y '.timezone' "$cfg")"

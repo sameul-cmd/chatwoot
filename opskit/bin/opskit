@@ -46,6 +46,10 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/upgrade.sh"
 # shellcheck source=../lib/pack.sh
 . "$OPSKIT_ROOT/lib/pack.sh"
+# shellcheck source=../lib/llm.sh
+. "$OPSKIT_ROOT/lib/llm.sh"
+# shellcheck source=../lib/bot.sh
+. "$OPSKIT_ROOT/lib/bot.sh"
 # shellcheck source=../lib/channel_hints.sh
 . "$OPSKIT_ROOT/lib/channel_hints.sh"
 # shellcheck source=../lib/channels.sh
@@ -79,12 +83,21 @@ Commands:
   channels plan <id> [--lang en|bn|both] [--for client|owner|all]   the client's (and our) to-do list per channel
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
+  bot enable <id> --inbox N [--inbox M]   register the AI first-reply bot in Chatwoot and attach it to those inboxes
+  bot disable <id>            kill switch: detach everywhere, open waiting chats for people, stop the bot
+  bot status <id>             container health, attached inboxes, answer / handoff counts
+  bot reload <id>             re-read the client's kb/ folder without restarting
+  bot unanswered <id>         questions the bot could not answer (customer text: run on your own machine)
   pack validate [<industry>|<file>]   check one pack, all packs, or one pack file
   pack list                   the available industry packs
   pack apply <id> <industry> [--dry-run] [--inbox N] [--include-unreviewed]   saved replies, labels, rules, hours: shows the plan first
   pack review <industry>      all Bangla texts on one page for proofreading
   pack approve <industry> --key KEY | --all   mark proofread Bangla as approved
-  llm models|effort <client>  BYOK model picker / effort (available in Phase 8)
+  llm set-key <id> --base-url URL [--paid]   save the BYOK key (hidden prompt or $AIBOT_LLM_API_KEY) and endpoint
+  llm models <id>             list the service's models (* = selected)
+  llm model <id> <name>       choose the chat model
+  llm effort <id> none|low|medium|high|max   reasoning effort
+  llm embedding-model <id> <name>|none   optional embedding model for hybrid KB search
   selftest                    end-to-end local self test (available from Phase 2)
   help                        show this help
 EOF
@@ -507,7 +520,7 @@ main() {
   case "$cmd" in
     help | -h | --help) usage ;;
     doctor) cmd_doctor ;;
-    client | bot)
+    client)
       local sub="${1:-}"
       shift || true
       case "$sub" in
@@ -663,9 +676,43 @@ main() {
           ;;
       esac
       ;;
+    bot)
+      local botsub="${1:-}"
+      shift || true
+      if [ "$botsub" = validate ]; then
+        cmd_validate bot "$@"
+        return
+      fi
+      valid_client_id "${1:-}" || { log_error "usage: opskit bot enable|disable|status|reload|unanswered <id> ..."; exit 2; }
+      [ -d "$(client_dir "$1")" ] || die "client not found: $1"
+      case "$botsub" in
+        enable) bot_enable "$@" ;;
+        disable) bot_disable "$@" ;;
+        status) bot_status "$@" ;;
+        reload) bot_reload "$@" ;;
+        unanswered) bot_unanswered "$@" ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
     llm)
-      echo "opskit llm: available in Phase 8 (BYOK model picker, ADR-011)" >&2
-      exit 3
+      local llmsub="${1:-}"
+      shift || true
+      valid_client_id "${1:-}" || { log_error "usage: opskit llm set-key|models|model|effort|embedding-model <id> ..."; exit 2; }
+      [ -d "$(client_dir "$1")" ] || die "client not found: $1"
+      case "$llmsub" in
+        set-key) llm_set_key "$@" ;;
+        models) llm_models "$@" ;;
+        model) llm_model "$@" ;;
+        effort) llm_effort "$@" ;;
+        embedding-model) llm_embedding_model "$@" ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
       ;;
     selftest)
       if [ "${1:-}" = "upgrade" ]; then cmd_selftest_upgrade; else cmd_selftest; fi

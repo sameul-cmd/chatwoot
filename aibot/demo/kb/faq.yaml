@@ -1,0 +1,74 @@
+# Demo Shop (fictional handmade bag shop in Dhaka). Fictional data only.
+items:
+  - key: opening_hours
+    question: {en: "What are your opening hours?", bn: "আপনাদের খোলা থাকার সময় কখন?"}
+    answer:
+      en: "We are open every day from 10 am to 8 pm."
+      bn: "আমরা প্রতিদিন সকাল ১০টা থেকে রাত ৮টা পর্যন্ত খোলা থাকি।"
+    aliases: ["kokhon khola", "shop kokhon khola thake"]
+  - key: location
+    question: {en: "Where is your shop?", bn: "আপনাদের দোকান কোথায়?"}
+    answer:
+      en: "Our shop is at House 12, Road 5, Dhanmondi, Dhaka."
+      bn: "আমাদের দোকান ধানমন্ডি, ঢাকার ৫ নম্বর রোডের ১২ নম্বর বাড়িতে।"
+    aliases: ["shop kothay", "address ki"]
+  - key: delivery_time
+    question: {en: "How long does delivery take?", bn: "ডেলিভারিতে কত সময় লাগে?"}
+    answer:
+      en: "Delivery takes 2 to 3 days inside Dhaka and 4 to 6 days outside Dhaka."
+      bn: "ঢাকার ভেতরে ডেলিভারিতে ২ থেকে ৩ দিন এবং ঢাকার বাইরে ৪ থেকে ৬ দিন লাগে।"
+    aliases: ["delivery kobe", "kobe pabo", "koto din lagbe"]
+  - key: delivery_charge
+    question: {en: "What is the delivery charge?", bn: "ডেলিভারি চার্জ কত?"}
+    answer:
+      en: "The delivery charge is 60 taka inside Dhaka and 120 taka outside Dhaka."
+      bn: "ডেলিভারি চার্জ ঢাকার ভেতরে ৬০ টাকা এবং ঢাকার বাইরে ১২০ টাকা।"
+    aliases: ["delivery charge koto", "courier charge koto"]
+  - key: payment_methods
+    question: {en: "Which payment methods do you accept?", bn: "আপনারা কোন কোন পেমেন্ট পদ্ধতি নেন?"}
+    answer:
+      en: "You can pay by bKash, Nagad or cash on delivery."
+      bn: "আপনি বিকাশ, নগদ অথবা ক্যাশ অন ডেলিভারিতে পেমেন্ট করতে পারবেন।"
+    aliases: ["payment kivabe", "bkash e pay kora jabe"]
+  - key: return_policy
+    question: {en: "What is your return policy?", bn: "আপনাদের রিটার্ন নীতি কী?"}
+    answer:
+      en: "You can return an unused bag within 7 days of delivery. The delivery charge is not refunded."
+      bn: "ডেলিভারির ৭ দিনের মধ্যে অব্যবহৃত ব্যাগ ফেরত দেওয়া যাবে। ডেলিভারি চার্জ ফেরত দেওয়া হয় না।"
+    aliases: ["ferot", "return kora jabe"]
+  - key: how_to_order
+    question: {en: "How do I place an order?", bn: "কীভাবে অর্ডার করব?"}
+    answer:
+      en: "Send us the product name, your name, phone number and address in this chat and we will confirm your order."
+      bn: "এই চ্যাটে পণ্যের নাম, আপনার নাম, ফোন নম্বর ও ঠিকানা পাঠান, আমরা আপনার অর্ডার নিশ্চিত করব।"
+    aliases: ["order kivabe korbo", "order dibo"]
+  - key: stock
+    question: {en: "Is this bag in stock?", bn: "এই ব্যাগটি কি স্টকে আছে?"}
+    answer:
+      en: "Please send us the product name or a photo and we will check if it is in stock."
+      bn: "অনুগ্রহ করে পণ্যের নাম বা একটি ছবি পাঠান, আমরা স্টকে আছে কি না দেখে জানাব।"
+    aliases: ["stock ache", "ache ki"]
+  - key: price_tote
+    question: {en: "How much is the Classic Tote Bag?", bn: "ক্লাসিক টোট ব্যাগের দাম কত?"}
+    answer:
+      en: "The Classic Tote Bag costs 1,200 taka."
+      bn: "ক্লাসিক টোট ব্যাগের দাম ১,২০০ টাকা।"
+    aliases: ["tote bag er dam", "dam koto", "price koto"]
+  - key: warranty
+    question: {en: "Is there a warranty?", bn: "ওয়ারেন্টি আছে কি?"}
+    answer:
+      en: "Our bags have a 6 month stitching warranty."
+      bn: "আমাদের ব্যাগে ৬ মাসের সেলাই ওয়ারেন্টি আছে।"
+    aliases: ["warranty ache", "guarantee ache"]
+  - key: custom_orders
+    question: {en: "Do you make custom orders?", bn: "আপনারা কি কাস্টম অর্ডার নেন?"}
+    answer:
+      en: "Yes, we make custom orders. Delivery of a custom order takes 10 to 14 days."
+      bn: "হ্যাঁ, আমরা কাস্টম অর্ডার নিই। কাস্টম অর্ডার ডেলিভারিতে ১০ থেকে ১৪ দিন লাগে।"
+    aliases: ["custom order hobe", "nijer design e banano"]
+  - key: contact
+    question: {en: "How can I contact you?", bn: "আপনাদের সাথে কীভাবে যোগাযোগ করব?"}
+    answer:
+      en: "You can message us right here, or call the shop number on our Facebook page during opening hours."
+      bn: "আপনি এখানেই মেসেজ করতে পারেন, অথবা খোলা থাকার সময় আমাদের ফেসবুক পেজে দেওয়া দোকানের নম্বরে ফোন করতে পারেন।"
+    aliases: ["contact kivabe", "phone number koto"]
