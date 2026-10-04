@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 6 done locally; next: Phase 7 (industry packs) when the owner says go
-- **Current task:** Phase 7 plan written (`docs/tasks/phase-7.md`); waiting for the owner's answers, then start 7.1
+- **Current task:** Phase 7 approved (defaults); next: 7.1. FIRST finish Phase 6: read the full-check log result, update the Phase 6 rows in this file that say PENDING, push
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -40,7 +40,7 @@
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | full `opskit/bin/check` was still running when this was pushed: bats suites passed, selftests PENDING (update this row when it finishes) |
-| 7 | Industry starter packs bn + en | Planned (task file `docs/tasks/phase-7.md`, awaiting owner answers to 8 questions) | — |
+| 7 | Industry starter packs bn + en | Planned and approved (all 8 defaults accepted); start at 7.1 once the Phase 6 full check has finished | — |
 | 8 | aibot | Not started | — |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |

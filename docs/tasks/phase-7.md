@@ -16,6 +16,7 @@ A new client's inbox starts empty. A "pack" is a ready-made starter set for one 
 - Our own earlier finding: through Caddy the API header must be `api-access-token`; the monitor/admin API user from Phase 4 can be reused for writes (needs administrator).
 
 ## Open questions for the owner (plain words; defaults in bold)
+**Owner answered 2026-10-04: all 8 defaults accepted.**
 1. **Which packs.** I write **f-commerce (online shop selling through Facebook/WhatsApp/Instagram) in full depth**, plus `generic`, and **lighter versions of clinic, travel, education, service** (about 8 saved replies, 5 labels, 2 rules each) that you can ask me to deepen when you get a real client in that field.
 2. **How Bangla and English share saved replies.** An agent should see both languages. **Default:** every item becomes two saved replies, `/order_ask_bn` and `/order_ask_en` (endings `_bn` / `_en`), only for the languages the client has in `client.yaml`.
 3. **Bangla not yet proofread.** **Default:** `pack apply` lists unproofread Bangla in the dry run and refuses to apply it to a client unless you add `--include-unreviewed`; the demo and selftest use that flag. A new command `opskit pack review <industry>` prints all Bangla texts on one page for you to proofread; when you tell me "approved", I flip the flags.
