@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 2 - Client deployment kit (done, verified locally)
-- **Current task:** `/start-phase` for Phase 3 (Backups & restore) when the owner says go
+- **Current phase:** Phase 3 - Backups & restore (planned)
+- **Current task:** Phase 3 plan written (`docs/tasks/phase-3.md`); waiting for owner approval of its 7 open questions (backup/restore logic + secrets), then start 3.1
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -11,7 +11,7 @@
 | 0 | Fork, set up & explore Chatwoot | Done on cloud sandbox; owner-account tests (Telegram, email, WhatsApp, Meta) and Bengali UI check pending on owner device | cloud-verified 2026-10-04 |
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
-| 3 | Backups & restore | Not started | — |
+| 3 | Backups & restore | Planned (task file ready, awaiting owner approval) | — |
 | 4 | Monitoring & alerts via shared ops-hub | Not started | — |
 | 5 | Safe upgrades | Not started | — |
 | 6 | Channel runbooks & checkers | Not started | — |
