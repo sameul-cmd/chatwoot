@@ -6,9 +6,11 @@ import logging
 import time
 
 from ..chatwoot import ChatwootError
+from ..config import BotConfig
 from ..events import IncomingMessage
+from ..kbstate import KbState
 from ..lang import detect, reply_language
-from ..llm import LlmError
+from ..llm import LlmClient, LlmError
 from ..messages import answer_message, handoff_message
 from ..models import Decision, HandoffReason
 from ..policy import post_check, pre_check
@@ -16,6 +18,26 @@ from . import Context
 
 log = logging.getLogger("aibot.answer")
 HANDOFF_LABEL = "ai-handoff"
+
+
+async def decide(
+    cfg: BotConfig, kb: KbState, llm: LlmClient, text: str, lang: str, bot_turns: int
+) -> tuple[Decision, str | None, float | None]:
+    """The whole answer-or-hand-off decision for one customer message (shared with `aibot eval`).
+
+    Returns the decision, how the KB was searched and the AI confidence (None where that step did not happen).
+    """
+    if reason := pre_check(text, bot_turns, cfg):
+        return Decision("handoff", reason), None, None
+    found = await kb.search(text)
+    if not found.chunks:
+        return Decision("handoff", "off_topic"), found.mode, None
+    try:
+        result = await llm.answer(text, found.chunks, lang)
+    except LlmError as exc:
+        log.warning("handing off after an AI error: %s", exc)
+        return Decision("handoff", "llm_error"), found.mode, None
+    return post_check(result, {c.id: c.content for c in found.chunks}, cfg), found.mode, result.confidence
 
 
 class AnswerHandler:
@@ -35,10 +57,12 @@ class AnswerHandler:
         decision: Decision
         if not event.text:
             decision = Decision("handoff", "unsupported_message")
-        elif reason := pre_check(event.text, ctx.audit.bot_turns(event.conversation_id), cfg):
-            decision = Decision("handoff", reason)
         else:
-            decision = await self._decide(event, ctx, lang, row)
+            decision, row["retrieval"], row["confidence"] = await decide(
+                cfg, ctx.kb, ctx.llm, event.text, lang, ctx.audit.bot_turns(event.conversation_id)
+            )
+            if decision.reason == "llm_error":
+                row["error"] = "llm_error"
         error = None
         if decision.action == "answer":
             error = await self._send(ctx, event, answer_message(decision.answer, lang, cfg, first))
@@ -54,22 +78,6 @@ class AnswerHandler:
         )
         ctx.audit.record(**row)
         return True
-
-    async def _decide(
-        self, event: IncomingMessage, ctx: Context, lang: str, row: dict[str, object]
-    ) -> Decision:
-        found = await ctx.kb.search(event.text)
-        row["retrieval"] = found.mode
-        if not found.chunks:
-            return Decision("handoff", "off_topic")
-        try:
-            result = await ctx.llm.answer(event.text, found.chunks, lang)
-        except LlmError as exc:
-            log.warning("handing off after an AI error: %s", exc)
-            row["error"] = "llm_error"
-            return Decision("handoff", "llm_error")
-        row["confidence"] = result.confidence
-        return post_check(result, {c.id: c.content for c in found.chunks}, ctx.cfg)
 
     @staticmethod
     async def _send(ctx: Context, event: IncomingMessage, text: str) -> str | None:

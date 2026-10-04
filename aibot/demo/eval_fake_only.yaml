@@ -1,0 +1,4 @@
+# Only meaningful with the scripted fake AI (opskit/tests/fake_llm.py): its INVENT-A-PRICE marker makes it add a made-up
+# price, which the bot's fact guard must catch. A real model ignores the marker, so this file is not used with one.
+cases:
+  - {id: invented_price_is_caught, question: "How much is the Classic Tote Bag? INVENT-A-PRICE", expect: handoff, reason: invented_fact, critical: true}

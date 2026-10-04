@@ -179,3 +179,12 @@ bot_unanswered() {
   _require_local "$1"
   _bot_http "$1" GET /metrics | jq -r '.unanswered[] | "\(.count)x  \(.question)"'
 }
+
+# bot_eval ID -> score the bot against clients/<id>/kb/eval.yaml (the go-live gate); runs inside the bot container
+bot_eval() {
+  local id="$1"
+  _require_local "$id"
+  [ -f "$(client_dir "$id")/kb/eval.yaml" ] || die "no test questions: write $(client_dir "$id")/kb/eval.yaml first (see docs/runbooks/bot.md)"
+  [ "$(_cfg '.bot.enabled // false' "$id")" = true ] || die "the bot is not set up for ${id}: opskit bot enable ${id} --inbox N"
+  dc "$id" exec -T aibot python -m aibot.eval --cases /kb/eval.yaml </dev/null
+}

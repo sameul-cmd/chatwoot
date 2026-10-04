@@ -73,7 +73,7 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Goal:** replaces the placeholder: `llm models <id>` lists the endpoint's `/models` (needs the key), `llm model <id> <name>` and `llm effort <id> none|low|medium|high|max` write to `client.yaml bot.llm`, `llm set-key <id> [--paid]` stores the key from a hidden prompt or the environment in `clients/<id>/aibot-llm.env` (mode 600) and records the paid-tier statement you make; re-render + restart aibot. Client mode still refuses to start without paid-tier or an owner/client key.
 - **Acceptance:** bats with a fake `/models`; key never printed; invalid effort rejected with the valid values.
 
-### [ ] 8.9 — `aibot eval` and the demo KB and test set
+### [x] 8.9 — `aibot eval` and the demo KB and test set
 - **Goal:** `eval.py` runs a client's test set (YAML: question, language, expected outcome: answer containing certain facts / handoff / forbidden claims) through the real pipeline and scores **correct / handed off / wrong / wrong price-or-policy**, prints the gate result (0 wrong prices/policies and at least 90% correct-or-handed-off) and a table of failures without customer data; `opskit bot eval <id>`. A demo KB (fictional shop) and a 24-question demo test set (KB questions in bn/en/Banglish, off-topic, human request, complaint, invented-price traps).
 - **Acceptance:** with the scripted fake AI the harness scores each case type correctly and the gate logic passes/fails as designed (pytest); documented that the real-model score must be taken with your key.
 

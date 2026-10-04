@@ -1,0 +1,29 @@
+# Test questions for the Demo Shop (fictional). `opskit bot eval <id>` runs them through the real bot.
+# expect: answer -> the answer must contain every must_include group (a group is any-of) and none of must_not_include
+# expect: handoff -> a person must take it (optionally with reason: ...)
+# critical: true -> a wrong answer here counts as a wrong price/policy (the go-live gate allows none)
+cases:
+  - {id: delivery_en, question: "How long does delivery take?", expect: answer, must_include: ["2 to 3 days"], critical: true}
+  - {id: delivery_bn, question: "ডেলিভারিতে কত সময় লাগে?", expect: answer, must_include: ["২ থেকে ৩ দিন"], critical: true}
+  - {id: delivery_banglish, question: "delivery kobe pabo?", expect: answer, must_include: [["2 to 3 days", "২ থেকে ৩ দিন"]], critical: true}
+  - {id: charge_en, question: "What is the delivery charge outside Dhaka?", expect: answer, must_include: ["120 taka"], critical: true}
+  - {id: price_en, question: "How much is the Classic Tote Bag?", expect: answer, must_include: ["1,200"], critical: true}
+  - {id: price_bn, question: "ক্লাসিক টোট ব্যাগের দাম কত?", expect: answer, must_include: ["১,২০০"], critical: true}
+  - {id: price_banglish, question: "tote bag er dam koto?", expect: answer, must_include: [["1,200", "১,২০০"]], critical: true}
+  - {id: hours_en, question: "What are your opening hours?", expect: answer, must_include: ["10 am"]}
+  - {id: hours_bn, question: "আপনাদের খোলা থাকার সময় কখন?", expect: answer, must_include: ["সকাল ১০টা"]}
+  - {id: hours_banglish, question: "shop kokhon khola thake?", expect: answer, must_include: [["10 am", "সকাল ১০টা"]]}
+  - {id: payment_en, question: "Which payment methods do you accept?", expect: answer, must_include: ["bKash"]}
+  - {id: payment_bn, question: "আপনারা কি বিকাশ নেন?", expect: answer, must_include: ["বিকাশ"]}
+  - {id: return_en, question: "Can I return a bag?", expect: answer, must_include: ["7 days"], critical: true}
+  - {id: location_en, question: "Where is your shop?", expect: answer, must_include: ["Dhanmondi"]}
+  - {id: warranty_en, question: "Is there a warranty?", expect: answer, must_include: ["6 month"], critical: true}
+  - {id: custom_en, question: "Do you make custom orders?", expect: answer, must_include: ["10 to 14 days"], critical: true}
+  - {id: contact_en, question: "How can I contact you?", expect: answer, must_include: ["message us"]}
+  - {id: human_en, question: "Can I talk to a human please?", expect: handoff, reason: human_request}
+  - {id: human_bn, question: "মানুষ চাই", expect: handoff, reason: human_request}
+  - {id: complaint_en, question: "This is a scam, I want a refund", expect: handoff, reason: upset}
+  - {id: complaint_bn, question: "আমি অভিযোগ করতে চাই", expect: handoff, reason: upset}
+  - {id: offtopic_en, question: "What is the capital of France?", expect: handoff, reason: off_topic}
+  - {id: offtopic_joke, question: "Tell me a joke", expect: handoff, reason: off_topic}
+  - {id: not_sold, question: "Do you sell sunglasses?", expect: handoff, critical: true}

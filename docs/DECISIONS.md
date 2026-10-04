@@ -47,3 +47,6 @@
 
 ### ADR-010: Two IDE packages share docs
 - **Status:** accepted — Kilo: `AGENTS.fork.md` + `kilo.jsonc` + `.kilo/`. Factory: `.factory/AGENTS.md` + `.factory/skills/`. Claude Code (this fork): `.claude/CLAUDE.md` + `.claude/skills/`.
+
+### ADR-017: aibot design - handoff by default, KB-only answers, fact guard, hybrid search
+- **Status:** accepted (owner answers, Phase 8, 4 Oct 2026) - **Decision:** the bot answers only when keyword/embedding search finds KB entries, the AI returns strict JSON with confidence >= 0.7 and at least one used entry, **and** every number or number word in the answer appears in the used entries (the fact guard); anything else, plus human requests, complaints (word list or the AI's mood flag), the 4th customer message and every AI/Chatwoot failure, hands the chat to a person. Search is hybrid (BM25 + optional embeddings from the same OpenAI-compatible service, each the fallback of the other). The bot token cannot list teams or messages (verified), so the team id is resolved by `opskit bot enable` and turns are counted in the bot's own SQLite. Fixed Bangla messages are drafts until the owner approves them. **Consequences:** a bot or AI outage degrades to "a person answers" (also guaranteed by Chatwoot when the webhook is unreachable); quality is bounded by the KB; real-model quality is measured by `aibot eval`, never assumed.

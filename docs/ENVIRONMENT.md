@@ -38,6 +38,9 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | operator shell, only at `opskit alerts set-telegram` | saved to `clients/<id>/alerts.env` (mode 600); `TELEGRAM_API_BASE` overrides the API URL (tests) |
 | `TELEGRAM_API_BASE`, `META_GRAPH_BASE`, `META_GRAPH_VERSION` | tests / channel checks | override the Telegram API URL and the Meta Graph URL/version used by read-only channel probes (default `https://api.telegram.org`, `https://graph.facebook.com`) |
 | `OPSKIT_PACKS_DIR` | tests | use another folder of packs than `opskit/packs` |
+| `AIBOT_LLM_API_KEY` (name set by `bot.llm.api_key_env`) | operator shell, only at `opskit llm set-key` | the BYOK key; stored in `clients/<id>/llm.env` (mode 600), never printed; a hidden prompt is used when unset |
+| `clients/<id>/llm.env`, `clients/<id>/bot.env` | written by `llm set-key` / `bot enable` | AI key; Chatwoot bot token, webhook signing secret, account and team id. Mode 600, git-ignored, merged into `stack/aibot.env`. After a restore run `bot enable` again |
+| `AIBOT_MODE`, `AIBOT_CONFIG`, `AIBOT_KB_DIR`, `AIBOT_DATA_DIR`, `AIBOT_ACCOUNT_ID`, `AIBOT_HANDOFF_TEAM_ID`, `AIBOT_BUSINESS_NAME`, `AIBOT_CHATWOOT_HMAC_SECRET` | rendered into the bot container | see `aibot/src/aibot/config.py` |
 | `OPSKIT_HEARTBEAT_URL` | host | external dead-man's-switch ping (healthchecks.io / UptimeRobot) called after each host monitor run |
 | `OPSKIT_STATE_NOW`, `OPSKIT_NOW` | tests/selftest | fake clocks: decision clock only / all clocks |
 | `OPSKIT_AIBOT_IMAGE` | operator shell | use an existing image for the bot instead of building (offline / rate-limited / Phase 10) |

@@ -88,6 +88,7 @@ Commands:
   bot status <id>             container health, attached inboxes, answer / handoff counts
   bot reload <id>             re-read the client's kb/ folder without restarting
   bot unanswered <id>         questions the bot could not answer (customer text: run on your own machine)
+  bot eval <id>               score the bot against kb/eval.yaml and apply the go-live gate (needs the real AI key)
   pack validate [<industry>|<file>]   check one pack, all packs, or one pack file
   pack list                   the available industry packs
   pack apply <id> <industry> [--dry-run] [--inbox N] [--include-unreviewed]   saved replies, labels, rules, hours: shows the plan first
@@ -268,6 +269,7 @@ cmd_selftest() {
     _selftest_monitoring "$id" "$tmp" || rc=1
     _selftest_channels "$id" "$tmp" || rc=1
     _selftest_packs "$id" || rc=1
+    _selftest_bot "$id" "$tmp" || rc=1
   fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
   return "$rc"
@@ -430,6 +432,114 @@ _selftest_packs() {
   if [ "$(_selftest_visitor_labels "$id" "$tk" 'দাম কত?' price)" = "price" ] && [ -z "$(_selftest_visitor_labels "$id" "$tk" 'hello there')" ]; then
     _selftest_row "packs: keyword rule fires" PASS "visitor 'দাম কত?' gets the price label, 'hello there' gets none"
   else _selftest_row "packs: keyword rule fires" FAIL "label missing or wrongly added"; return 1; fi
+}
+
+# _st_chat ID WEBSITE_TOKEN TEXT [AUTH] [WANT] -> one JSON line about a visitor conversation after the bot has reacted
+# WANT = how many outgoing messages (bot replies and private notes, counted over the whole conversation) to wait for
+_st_chat() {
+  local id="$1" tk="$2" text="$3" at="${4:-}" want="${5:-1}" hdr conv msgs n _
+  [ -n "$at" ] || at="$(_hc_curl "$id" "/api/v1/widget/config?website_token=${tk}" -X POST -H 'Content-Type: application/json' -d '{"locale":"en"}' | jq -r '.website_channel_config.auth_token // empty')"
+  hdr="$(mktemp)"
+  chmod 600 "$hdr"
+  printf 'X-Auth-Token: %s\n' "$at" >"$hdr"
+  conv="$(_hc_curl "$id" "/api/v1/widget/messages?website_token=${tk}&locale=en" -X POST -H "@$hdr" -H 'Content-Type: application/json' \
+    -d "$(jq -cn --arg c "$text" '{message: {content: $c, timestamp: "2026-01-01T00:00:00.000Z"}}')" | jq -r '.conversation_id // empty')"
+  rm -f "$hdr"
+  [ -n "$conv" ] || return 1
+  for _ in $(seq 1 25); do
+    msgs="$(cw_request GET "/api/v1/accounts/1/conversations/${conv}/messages")"
+    n="$(jq '[.payload[] | select(.message_type == 1)] | length' <<<"$msgs")"
+    [ "$n" -lt "$want" ] || break
+    sleep 1
+  done
+  sleep 1
+  jq -cn --argjson conv "$conv" --arg auth "$at" --argjson msgs "$msgs" --argjson c "$(cw_request GET "/api/v1/accounts/1/conversations/${conv}")" \
+    '{conv: $conv, auth: $auth, status: $c.status, labels: $c.labels, team: ($c.meta.team.name // null),
+      bot: [$msgs.payload[] | select(.message_type == 1 and (.private | not)) | .content],
+      notes: [$msgs.payload[] | select(.message_type == 1 and .private) | .content]}'
+}
+
+# _selftest_bot ID TMPDIR -> the AI first-reply bot against the running demo, with the scripted fake AI
+_selftest_bot() {
+  local id="$1" tmp="$2" pid rc=0
+  python3 "$OPSKIT_ROOT/tests/fake_llm.py" "$tmp/llm.port" "$tmp/llm.log" "$tmp/llm.mode" 0.0.0.0 &
+  pid=$!
+  _selftest_bot_run "$id" "$tmp" || rc=1
+  kill "$pid" 2>/dev/null || true
+  return "$rc"
+}
+
+_selftest_bot_run() {
+  local id="$1" tmp="$2" gw port dir tk inbox r a out
+  local base="/api/v1/accounts/1"
+  dir="$(client_dir "$id")"
+  for _ in $(seq 1 50); do [ -s "$tmp/llm.port" ] && break; sleep 0.1; done
+  port="$(cat "$tmp/llm.port")"
+  gw="$(docker network inspect "${id}_default" -f '{{(index .IPAM.Config 0).Gateway}}')"
+  cw_use_stack "$id" || { _selftest_row "bot: setup" FAIL "no API token"; return 1; }
+  cw_request POST "$base/teams" -H 'Content-Type: application/json' -d '{"name":"support"}' >/dev/null
+  cp -r "$OPSKIT_REPO_ROOT/aibot/demo/kb" "$dir/"
+  yq -y -i '.bot.handoff_team = "support"' "$dir/client.yaml"
+  AIBOT_LLM_API_KEY=fake-selftest-key llm_set_key "$id" --base-url "http://${gw}:${port}/v1" --paid >/dev/null 2>&1
+  llm_model "$id" fake-chat >/dev/null 2>&1
+  llm_embedding_model "$id" fake-embed >/dev/null 2>&1
+  tk="$(cw_request GET "$base/inboxes" | jq -r '.payload[] | select(.name == "ST widget") | .website_token')"
+  inbox="$(cw_request GET "$base/inboxes" | jq -r '.payload[] | select(.name == "ST widget") | .id')"
+  if bot_enable "$id" --inbox "$inbox" >/dev/null 2>&1 && [ "$(_bot_http "$id" GET /health | jq -r '.wired')" = true ] && _bot_attached 1 "$(cw_request GET "$base/agent_bots" | jq -r '.[] | select(.name == "opskit-aibot") | .id')" | grep -qx "$inbox"; then
+    _selftest_row "bot: enable registers + attaches" PASS "agent bot created, wired, attached to inbox ${inbox}, KB $(_bot_http "$id" GET /health | jq -r .kb_entries) entries"
+  else _selftest_row "bot: enable registers + attaches" FAIL "see: opskit bot enable ${id} --inbox ${inbox}"; return 1; fi
+  r="$(_st_chat "$id" "$tk" "How long does delivery take?" "" 1)"
+  a="$(_st_chat "$id" "$tk" "ডেলিভারিতে কত সময় লাগে?" "" 1)"
+  out="$(_st_chat "$id" "$tk" "delivery kobe pabo?" "" 1)"
+  if jq -e '.bot[0] | contains("automated assistant") and contains("2 to 3 days")' <<<"$r" >/dev/null \
+    && jq -e '.bot[0] | contains("২ থেকে ৩ দিন") and contains("স্বয়ংক্রিয়")' <<<"$a" >/dev/null \
+    && jq -e '.bot[0] | contains("২ থেকে ৩ দিন")' <<<"$out" >/dev/null && [ "$(jq -r .status <<<"$r")" = pending ]; then
+    _selftest_row "bot: answers en, bn, Banglish + notice" PASS "KB answers, automation notice first, chat stays with the bot"
+  else _selftest_row "bot: answers en, bn, Banglish + notice" FAIL "unexpected replies"; return 1; fi
+  for t in "talk to a human|human_request" "মানুষ চাই|human_request"; do
+    r="$(_st_chat "$id" "$tk" "${t%%|*}" "" 2)"
+    if [ "$(jq -r .status <<<"$r")" = open ] && jq -e '.labels | index("ai-handoff")' <<<"$r" >/dev/null && [ "$(jq -r .team <<<"$r")" = support ] && [ "$(jq -r '.notes[0]' <<<"$r")" = "Handoff reason: ${t##*|}" ]; then :; else _selftest_row "bot: hands off on a human request" FAIL "${t%%|*}"; return 1; fi
+  done
+  _selftest_row "bot: hands off on a human request" PASS "English and Bangla: chat open, label ai-handoff, team support, reason note"
+  r="$(_st_chat "$id" "$tk" "What is the capital of France?" "" 2)"
+  out="$(_st_chat "$id" "$tk" "I want a refund, this is a scam" "" 2)"
+  if [ "$(jq -r '.notes[0]' <<<"$r")" = "Handoff reason: off_topic" ] && [ "$(jq -r .status <<<"$r")" = open ] \
+    && [ "$(jq -r '.notes[0]' <<<"$out")" = "Handoff reason: upset" ] && [ "$(jq -r .status <<<"$out")" = open ]; then
+    _selftest_row "bot: hands off off-topic + complaint" PASS "reasons off_topic and upset"
+  else _selftest_row "bot: hands off off-topic + complaint" FAIL "unexpected handoff"; return 1; fi
+  r="$(_st_chat "$id" "$tk" "How long does delivery take?" "" 1)"
+  a="$(jq -r .auth <<<"$r")"
+  _st_chat "$id" "$tk" "What is the delivery charge?" "$a" 2 >/dev/null
+  _st_chat "$id" "$tk" "Which payment methods do you accept?" "$a" 3 >/dev/null
+  r="$(_st_chat "$id" "$tk" "How long does delivery take?" "$a" 5)"
+  if [ "$(jq -r .status <<<"$r")" = open ] && [ "$(jq -r '.notes[0]' <<<"$r")" = "Handoff reason: max_turns" ] && [ "$(jq '.bot | length' <<<"$r")" = 4 ]; then
+    _selftest_row "bot: hands off after 3 bot replies" PASS "3 answers, then reason max_turns"
+  else _selftest_row "bot: hands off after 3 bot replies" FAIL "unexpected turn handling"; return 1; fi
+  echo down >"$tmp/llm.mode"
+  r="$(_st_chat "$id" "$tk" "How long does delivery take?" "" 2)"
+  rm -f "$tmp/llm.mode"
+  if [ "$(jq -r .status <<<"$r")" = open ] && [ "$(jq -r '.notes[0]' <<<"$r")" = "Handoff reason: llm_error" ]; then
+    _selftest_row "bot: AI service down -> handoff" PASS "chat opened for people, reason llm_error"
+  else _selftest_row "bot: AI service down -> handoff" FAIL "customer was left waiting"; return 1; fi
+  out="$(bot_eval "$id" 2>&1)"
+  if [[ "$out" == *"GATE PASSED"* ]] && [[ "$out" == *"wrong price/policy 0"* ]]; then
+    _selftest_row "bot: eval gate (24 demo questions)" PASS "$(printf '%s' "$out" | head -n1 | cut -c1-100)"
+  else _selftest_row "bot: eval gate (24 demo questions)" FAIL "$(printf '%s' "$out" | tail -n2 | tr '\n' ' ' | cut -c1-100)"; return 1; fi
+  out="$(dc "$id" logs aibot 2>&1)"
+  if ! grep -qiE 'delivery|ডেলিভারি|refund|scam|capital|france|payment|fake-selftest-key' <<<"$out" && ! grep -qF "$(sed -n 's/^AIBOT_BOT_TOKEN=//p' "$dir/bot.env")" <<<"$out"; then
+    _selftest_row "bot: no message text or key in logs" PASS "$(wc -l <<<"$out" | tr -d ' ') log lines checked"
+  else _selftest_row "bot: no message text or key in logs" FAIL "customer text or a secret appeared in the bot log"; return 1; fi
+  r="$(_st_chat "$id" "$tk" "How long does delivery take?" "" 1)"
+  bot_disable "$id" >/dev/null 2>&1
+  out="$(cw_request GET "$base/conversations/$(jq -r .conv <<<"$r")" | jq -r .status)"
+  a="$(_st_chat "$id" "$tk" "hello" "" 0)"
+  if [ "$out" = open ] && [ "$(jq -r .status <<<"$a")" = open ] && [ "$(jq '.bot | length' <<<"$a")" = 0 ] && [ -z "$(_bot_attached 1 "$(cw_request GET "$base/agent_bots" | jq -r '.[] | select(.name == "opskit-aibot") | .id')")" ]; then
+    _selftest_row "bot: kill switch" PASS "detached, waiting chat opened, new chats go straight to people"
+  else _selftest_row "bot: kill switch" FAIL "bot still attached or chat stranded"; return 1; fi
+  if docker run --rm --entrypoint python -e AIBOT_MODE=client -e AIBOT_LLM_BASE_URL=http://x.example/v1 -e AIBOT_LLM_MODEL=m "opskit-aibot:${id}" \
+    -c 'import os; from aibot.config import load_config; load_config(os.environ)' 2>&1 | grep -q AIBOT_LLM_TIER_PAID; then
+    _selftest_row "bot: client mode needs paid key flag" PASS "refuses to start without AIBOT_LLM_TIER_PAID=true"
+  else _selftest_row "bot: client mode needs paid key flag" FAIL "started without the paid-tier statement"; return 1; fi
 }
 
 # _selftest_monitoring ID TMPDIR -> acceptance scenarios of SPEC Phase 4 against a pretend Telegram
@@ -683,7 +793,7 @@ main() {
         cmd_validate bot "$@"
         return
       fi
-      valid_client_id "${1:-}" || { log_error "usage: opskit bot enable|disable|status|reload|unanswered <id> ..."; exit 2; }
+      valid_client_id "${1:-}" || { log_error "usage: opskit bot enable|disable|status|reload|unanswered|eval <id> ..."; exit 2; }
       [ -d "$(client_dir "$1")" ] || die "client not found: $1"
       case "$botsub" in
         enable) bot_enable "$@" ;;
@@ -691,6 +801,7 @@ main() {
         status) bot_status "$@" ;;
         reload) bot_reload "$@" ;;
         unanswered) bot_unanswered "$@" ;;
+        eval) bot_eval "$@" ;;
         *)
           usage >&2
           exit 2

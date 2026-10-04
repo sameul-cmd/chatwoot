@@ -33,7 +33,7 @@ opskit/
   clients/, hosts/          git-ignored registries
 aibot/
   pyproject.toml, Dockerfile
-  src/aibot/{app.py, config.py, chatwoot.py, kb.py, retrieval.py, lang.py, llm.py, policy.py, handoff.py, audit.py, eval.py, metrics.py}
+  src/aibot/{app.py, config.py, models.py, events.py, chatwoot.py, kb.py, kbstate.py, retrieval.py, lang.py, llm.py, policy.py, messages.py, audit.py (also counts/metrics), eval.py, handlers/{answer.py}, prompts/}  (built in Phase 8; handoff steps live in handlers/answer.py)
   tests/
 .github/workflows/opskit-ci.yml, opskit-image.yml
 docs/ (ours), explore/ (git-ignored)
