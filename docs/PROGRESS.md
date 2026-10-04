@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 7 - Industry starter packs (in progress; Phase 6 done and verified)
-- **Current task:** Phase 7 built (7.1-7.11); the final full `opskit/bin/check` was still running when this was pushed: read its result, then update the Phase 7 rows marked PENDING
+- **Current task:** Phase 7 done and verified; Phase 8 planned (`docs/tasks/phase-8.md`), waiting for the owner's answers to its open questions
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -40,8 +40,8 @@
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
-| 7 | Industry starter packs bn + en | Built and live-verified on the demo; full `opskit/bin/check` PENDING at push time; Bangla NOT yet proofread by the owner | live demo + 21 bats tests + 6 selftest rows (see report) |
-| 8 | aibot | Not started | — |
+| 7 | Industry starter packs bn + en | Done locally (Bangla NOT yet proofread by the owner; real clients NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. 6 pack selftest rows, 2026-10-04 |
+| 8 | aibot | Planned (task file `docs/tasks/phase-8.md`, owner answering open questions) | — |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |
 | 11 | Field readiness | Not started | — |
@@ -82,7 +82,7 @@
 | Keyword rule really fires | PASS | live widget visitor: "দাম কত?" -> label `price`; "hello there" -> no label |
 | Dry run first, nothing deleted | PASS | bats: dry run sends no POST/PATCH; request log has no DELETE; code contains no delete call |
 | No prices / facts / digits in packs; automatic texts have no blanks | PASS | `pack validate` rules, proven to fail on deliberate mistakes (bats) |
-| `opskit/bin/check` | PENDING at push time | update when the run finishes |
+| `opskit/bin/check` | PASS | ALL CHECKS PASSED (shellcheck, all bats suites, aibot, selftest incl. 6 pack rows, selftest upgrade), exit 0 |
 Bugs found by the live run (not by unit tests): an empty id field made the shell shift every following field, so every create call was refused (fixed; the idempotency test now covers it).
 Findings: Chatwoot rule conditions are one flat chain, so rules cannot say "customer messages only"; label/saved-reply names must be unique (422 otherwise). See EXPLORATION_REPORT 5c.
 Security review: no token/password printed or stored; the state file holds hashes only; API errors shown are Chatwoot's own validation messages (<= 200 chars); temp files in a 700 folder removed on exit.
