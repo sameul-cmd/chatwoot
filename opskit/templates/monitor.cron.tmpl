@@ -1,0 +1,4 @@
+# opskit monitoring for ${CLIENT_ID} (installed to /etc/cron.d/opskit-monitor-${CLIENT_ID} on a real host in Phase 11)
+CRON_TZ=${TIMEZONE}
+*/5 * * * * root flock -n /var/lock/opskit-monitor-${CLIENT_ID}.lock ${OPSKIT_BIN} monitor run ${CLIENT_ID} >>/var/log/opskit-monitor-${CLIENT_ID}.log 2>&1
+*/15 * * * * root flock -n /var/lock/opskit-monitor-channels-${CLIENT_ID}.lock ${OPSKIT_BIN} monitor run ${CLIENT_ID} --channels >>/var/log/opskit-monitor-${CLIENT_ID}.log 2>&1

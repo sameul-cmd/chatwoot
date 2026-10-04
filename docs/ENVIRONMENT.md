@@ -35,5 +35,10 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | `OPSKIT_HUB_URL`, `OPSKIT_HUB_TOKEN` | host | optional ops-hub endpoint for alerts and heartbeats (Phase 4 defines the hub side) |
 | `CW_BASE_URL`, `CW_TOKEN`, `CW_RESOLVE`, `CW_INSECURE` | set by `cw_use_stack` | API helper settings; the token is never printed |
 
+| `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | operator shell, only at `opskit alerts set-telegram` | saved to `clients/<id>/alerts.env` (mode 600); `TELEGRAM_API_BASE` overrides the API URL (tests) |
+| `OPSKIT_HEARTBEAT_URL` | host | external dead-man's-switch ping (healthchecks.io / UptimeRobot) called after each host monitor run |
+| `OPSKIT_STATE_NOW`, `OPSKIT_NOW` | tests/selftest | fake clocks: decision clock only / all clocks |
+| `OPSKIT_AIBOT_IMAGE` | operator shell | use an existing image for the bot instead of building (offline / rate-limited / Phase 10) |
+
 ## 4. Rules
 Never commit `.env`, keys, `opskit/clients/`, `opskit/hosts/`, dumps, KBs of real clients, bot audit DBs. Rotate any leaked key. Free-tier LLM only with demo data.

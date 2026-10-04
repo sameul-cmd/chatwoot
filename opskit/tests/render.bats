@@ -198,3 +198,16 @@ new_local() { "$OPSKIT" client new demo --domain chat.demo.localhost --name "Dem
   "$OPSKIT" client render demo
   grep -qE '^30 3 \* \* \* root flock' "$OPSKIT_CLIENTS_DIR/demo/backup.cron"
 }
+
+@test "OPSKIT_AIBOT_IMAGE reuses an existing image instead of building" {
+  export OPSKIT_ROOT="$BATS_TEST_DIRNAME/.."
+  . "$OPSKIT_ROOT/lib/log.sh"
+  mkdir -p "$BATS_TEST_TMPDIR/fb"
+  printf '#!/bin/sh\necho "$@" >>"%s/docker.calls"\n' "$BATS_TEST_TMPDIR" >"$BATS_TEST_TMPDIR/fb/docker"
+  chmod +x "$BATS_TEST_TMPDIR/fb/docker"
+  . "$OPSKIT_ROOT/lib/render.sh"
+  . "$OPSKIT_ROOT/lib/deploy.sh"
+  PATH="$BATS_TEST_TMPDIR/fb:$PATH" OPSKIT_AIBOT_IMAGE=my/image:1 build_aibot_image demo
+  grep -q '^tag my/image:1 opskit-aibot:demo$' "$BATS_TEST_TMPDIR/docker.calls"
+  ! grep -q '^build' "$BATS_TEST_TMPDIR/docker.calls"
+}

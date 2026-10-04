@@ -66,6 +66,9 @@ backup_run() {
   [ "$(_cfg '.storage.type // "local"' "$id")" = "s3" ] && args+=(--no-storage)
   ensure_host_key "$id" || { emit_alert critical "$id" backup "host backup key missing" >/dev/null; return 1; }
   args+=(--recipient "$(host_recipient "$id")")
+  # optional files that belong in the encrypted escrow when they exist (Telegram settings, monitoring user token)
+  [ ! -s "$dir/alerts.env" ] || args+=(--escrow-file alerts.env)
+  [ ! -s "$dir/monitor.env" ] || args+=(--escrow-file monitor.env)
 
   dest="$("$OPSKIT_BACKUP_AGENT" --id "$id" --compose-file "$dir/stack/docker-compose.yml" --out "$out" --recipient "$rec" \
     --escrow-dir "$dir" --escrow-file secrets.env --escrow-file client.yaml --tag "$tag" "${args[@]}" | tail -n1)" || rc=$?

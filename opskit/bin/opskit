@@ -30,6 +30,16 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/restore.sh"
 # shellcheck source=../lib/chatwoot_api.sh
 . "$OPSKIT_ROOT/lib/chatwoot_api.sh"
+# shellcheck source=../lib/notify.sh
+. "$OPSKIT_ROOT/lib/notify.sh"
+# shellcheck source=../lib/alert_state.sh
+. "$OPSKIT_ROOT/lib/alert_state.sh"
+# shellcheck source=../lib/health.sh
+. "$OPSKIT_ROOT/lib/health.sh"
+# shellcheck source=../lib/channels_health.sh
+. "$OPSKIT_ROOT/lib/channels_health.sh"
+# shellcheck source=../lib/monitor.sh
+. "$OPSKIT_ROOT/lib/monitor.sh"
 # shellcheck source=../lib/checks.sh
 . "$OPSKIT_ROOT/lib/checks.sh"
 
@@ -49,6 +59,8 @@ Commands:
   backup run|list <id>        back up (db + uploads + encrypted secrets), prune, copy off-server / list backups
   backup verify <id> [--identity key] [--keep]   restore the latest backup into a throw-away staging stack and check it
   restore <id> --from <ts|latest> --target staging [--identity key] [--overwrite --yes]   restore into a fresh staging stack
+  monitor run <id> [--channels] | status <id>   run the health checks (host: every 5 min; --channels: every 15 min) / show state
+  alerts set-telegram|test <id>   save the Telegram bot settings (env TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) / send a test message
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
   pack validate <file>        validate a pack item file against the schema
@@ -180,6 +192,8 @@ cmd_selftest() {
   # shellcheck disable=SC2064  # expand $tmp/$id now on purpose
   trap "teardown_staging $sid >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
   cmd_client_new "$id" --domain chat.selftest.localhost --name "Selftest" --local --http-port 18080 --https-port 18443 || return 1
+  # start == end means "no quiet hours" so the monitoring scenarios do not depend on the time of day
+  printf 'alerts:\n  quiet_hours:\n    start: "00:00"\n    end: "00:00"\n' >>"$tmp/$id/client.yaml"
   deploy_client "$id" || rc=1
   if [ "$rc" -eq 0 ]; then
     post_deploy_checks "$id" || rc=1
@@ -215,7 +229,79 @@ cmd_selftest() {
       _selftest_row "overwrite protection" PASS "refused without flags and with a wrong typed id"
     fi
   fi
+  if [ "$rc" -eq 0 ]; then
+    teardown_staging "$sid" >/dev/null 2>&1 || true
+    _selftest_monitoring "$id" "$tmp" || rc=1
+  fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
+  return "$rc"
+}
+
+# _selftest_monitoring ID TMPDIR -> acceptance scenarios of SPEC Phase 4 against a pretend Telegram
+_selftest_monitoring() {
+  local id="$1" tmp="$2" fakepid real rc=0 st log portf port
+  log="$tmp/tg.log"
+  portf="$tmp/tg.port"
+  : >"$log"
+  python3 "$OPSKIT_ROOT/tests/fake_telegram.py" "$portf" "$log" &
+  fakepid=$!
+  # shellcheck disable=SC2064
+  trap "kill $fakepid 2>/dev/null; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  for _ in $(seq 1 50); do [ -s "$portf" ] && break; sleep 0.1; done
+  port="$(cat "$portf")"
+  export TELEGRAM_API_BASE="http://127.0.0.1:${port}"
+  (umask 077 && printf 'TELEGRAM_BOT_TOKEN=123456:selftestSELFTESTselftestSELF\nTELEGRAM_CHAT_ID=1\n' >"$(alerts_env_file "$id")")
+  real="$(date -u +%s)"
+  n() { wc -l <"$log" | tr -d ' '; }
+  tg() { jq -r .text "$log" | grep -q "$1"; }
+  # sidekiq_alive ID -> waits until the worker registered again (max 90 s)
+  sidekiq_back() {
+
+    for _ in $(seq 1 30); do
+      check_sidekiq "$id" | grep -q '|ok|' && return 0
+      sleep 3
+    done
+    return 1
+  }
+
+  monitor_run "$id" >/dev/null 2>&1; monitor_run "$id" --channels >/dev/null 2>&1
+  if [ "$(n)" = "0" ]; then _selftest_row "monitoring: healthy stack is silent" PASS "0 messages"; else _selftest_row "monitoring: healthy stack is silent" FAIL "$(n) unexpected messages"; rc=1; fi
+
+  dc "$id" stop sidekiq >/dev/null 2>&1; sleep 3
+  monitor_run "$id" >/dev/null 2>&1
+  if tg "CRITICAL.*Sidekiq"; then _selftest_row "monitoring: Sidekiq stopped -> critical" PASS "Telegram message at the first check (<= 5 min)"; else _selftest_row "monitoring: Sidekiq stopped -> critical" FAIL "no critical message"; rc=1; fi
+  st="$(n)"
+  OPSKIT_STATE_NOW=$((real + 300)) monitor_run "$id" >/dev/null 2>&1
+  if [ "$(n)" = "$st" ]; then _selftest_row "monitoring: no repeat within 30 min" PASS "same alert not re-sent"; else _selftest_row "monitoring: no repeat within 30 min" FAIL "repeated"; rc=1; fi
+  dc "$id" start sidekiq >/dev/null 2>&1; sidekiq_back
+  OPSKIT_STATE_NOW=$((real + 900)) monitor_run "$id" >/dev/null 2>&1
+  if tg "RESOLVED.*Sidekiq"; then _selftest_row "monitoring: recovery -> resolved" PASS "one RESOLVED message"; else _selftest_row "monitoring: recovery -> resolved" FAIL "no resolved message"; rc=1; fi
+
+  dc "$id" stop >/dev/null 2>&1; sleep 3
+  OPSKIT_STATE_NOW=$((real + 3000)) monitor_run "$id" >/dev/null 2>&1
+  if tg "CRITICAL.*Website" && tg "CRITICAL.*Services"; then _selftest_row "monitoring: whole stack stopped -> uptime alert" PASS "Website + Services critical"; else _selftest_row "monitoring: whole stack stopped -> uptime alert" FAIL "missing critical messages"; rc=1; fi
+  dc "$id" start >/dev/null 2>&1; wait_healthy "$id" 240 >/dev/null 2>&1; sidekiq_back
+  OPSKIT_STATE_NOW=$((real + 3300)) monitor_run "$id" >/dev/null 2>&1
+
+  dc "$id" exec -T -e ACTION=break rails bundle exec rails runner - <"$OPSKIT_ROOT/tests/rails/sim_inbox.rb" >/dev/null 2>&1
+  OPSKIT_STATE_NOW=$((real + 3600)) monitor_run "$id" --channels >/dev/null 2>&1
+  if tg "re-connected"; then _selftest_row "monitoring: disconnected inbox reported" PASS "critical for the simulated inbox"; else _selftest_row "monitoring: disconnected inbox reported" FAIL "not reported"; rc=1; fi
+  dc "$id" exec -T -e ACTION=fix rails bundle exec rails runner - <"$OPSKIT_ROOT/tests/rails/sim_inbox.rb" >/dev/null 2>&1
+  OPSKIT_STATE_NOW=$((real + 4500)) monitor_run "$id" --channels >/dev/null 2>&1
+  if tg "RESOLVED.*Channel"; then _selftest_row "monitoring: inbox fixed -> resolved" PASS "RESOLVED message"; else _selftest_row "monitoring: inbox fixed -> resolved" FAIL "no resolved message"; rc=1; fi
+
+  dc "$id" stop sidekiq >/dev/null 2>&1; sleep 3
+  st="$(n)"
+  if TELEGRAM_API_BASE="http://127.0.0.1:9" OPSKIT_STATE_NOW=$((real + 7000)) monitor_run "$id" >/dev/null 2>&1; then
+    _selftest_row "monitoring: Telegram unreachable" FAIL "no error exit"; rc=1
+  elif [ "$(n)" = "$st" ] && [ -n "$(ls "$OPSKIT_ALERT_DIR" 2>/dev/null)" ]; then
+    OPSKIT_STATE_NOW=$((real + 7300)) monitor_run "$id" >/dev/null 2>&1
+    if [ "$(n)" -gt "$st" ]; then _selftest_row "monitoring: Telegram unreachable" PASS "kept in outbox, delivered next cycle"; else _selftest_row "monitoring: Telegram unreachable" FAIL "not delivered later"; rc=1; fi
+  else
+    _selftest_row "monitoring: Telegram unreachable" FAIL "alert lost"; rc=1
+  fi
+  dc "$id" start sidekiq >/dev/null 2>&1
+  kill "$fakepid" 2>/dev/null || true
   return "$rc"
 }
 
@@ -254,6 +340,35 @@ main() {
             cmd_client_lifecycle "$sub" "$@"
           fi
           ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    monitor)
+      local msub="${1:-}" mid="${2:-}"
+      valid_client_id "$mid" || { log_error "usage: opskit monitor run|status <id>"; exit 2; }
+      [ -d "$(client_dir "$mid")" ] || die "client not found: $mid"
+      case "$msub" in
+        run)
+          shift 2
+          monitor_run "$mid" "$@"
+          ;;
+        status) monitor_status "$mid" ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    alerts)
+      local asub="${1:-}" aid="${2:-}"
+      valid_client_id "$aid" || { log_error "usage: opskit alerts set-telegram|test <id>"; exit 2; }
+      [ -d "$(client_dir "$aid")" ] || die "client not found: $aid"
+      case "$asub" in
+        set-telegram) alerts_set_telegram "$aid" ;;
+        test) telegram_send "$(alerts_env_file "$aid")" "✅ Test message from opskit for client ${aid}" && echo "test message sent" ;;
         *)
           usage >&2
           exit 2

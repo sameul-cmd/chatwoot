@@ -37,6 +37,8 @@ def _message(error) -> str:
     parts = [str(x) for x in error.absolute_path]
     if error.validator == "const" and len(parts) == 3 and parts[0] == "addons" and parts[2] == "enabled":
         return f"add-on '{parts[1]}' is V2 and not available yet (see docs/ADDONS.md)"
+    if error.validator == "const" and parts[:2] == ["alerts", "client_notify"]:
+        return "alerts.client_notify.enabled is not available yet: only the owner is notified for now"
     if error.validator == "enum" and parts == ["brand", "mode"]:
         return "brand.mode 'custom' is not available yet: white-label is an owner decision pending (see docs/ADDONS.md)"
     return error.message

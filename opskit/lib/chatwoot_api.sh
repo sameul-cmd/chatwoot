@@ -18,7 +18,8 @@ cw_request() {
   [ "${CW_INSECURE:-0}" != "1" ] || args+=(-k)
   body="$(mktemp)"
   while [ "$tries" -lt 3 ]; do
-    code="$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' -X "$method" -H "@$hdr" "${args[@]}" "$@" "${CW_BASE_URL}${path}" 2>/dev/null || echo 000)"
+    code="$(curl -sS --max-time 20 -o "$body" -w '%{http_code}' -X "$method" -H "@$hdr" "${args[@]}" "$@" "${CW_BASE_URL}${path}" 2>/dev/null || true)"
+    code="${code:-000}"
     case "$code" in 429 | 5* | 000) tries=$((tries + 1)); sleep 2 ;; *) break ;; esac
   done
   cat "$body"

@@ -122,6 +122,7 @@ AIBOT_LLM_TIER_PAID=true"
     BACKUP_SCHEDULE="$(_y '.backup.schedule // "0 2 * * *"' "$cfg")"
     OPSKIT_BIN="$OPSKIT_ROOT/bin/opskit"
     render_template "$OPSKIT_ROOT/templates/backup.cron.tmpl" "$dir/backup.cron" CLIENT_ID TIMEZONE BACKUP_SCHEDULE OPSKIT_BIN
+    render_template "$OPSKIT_ROOT/templates/monitor.cron.tmpl" "$dir/monitor.cron" CLIENT_ID TIMEZONE OPSKIT_BIN
     chmod 600 "$stack/.env.tmp" "$stack/aibot.env.tmp"
     mv -f "$stack/.env.tmp" "$stack/.env"
     mv -f "$stack/aibot.env.tmp" "$stack/aibot.env"

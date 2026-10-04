@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 4 - Monitoring & alerts (planned)
-- **Current task:** Phase 4 plan written (`docs/tasks/phase-4.md`); waiting for owner approval of its 7 open questions (new secret involved), then start 4.1
+- **Current phase:** Phase 4 - Monitoring & alerts (done, verified locally)
+- **Current task:** `/start-phase` for Phase 5 (Safe upgrades) when the owner says go
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -12,7 +12,7 @@
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
-| 4 | Monitoring & alerts via shared ops-hub | Planned (task file ready, awaiting owner approval) | — |
+| 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Not started | — |
 | 6 | Channel runbooks & checkers | Not started | — |
 | 7 | Industry starter packs bn + en | Not started | — |
@@ -23,6 +23,7 @@
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
+- 2026-10-04 Phase 4 (4.1-4.10): opskit/lib/{notify,alert_state,health,channels_health,monitor}.sh, templates/rails/ensure_monitor.rb, templates/monitor.cron.tmpl, schema alerts, commands monitor run|status and alerts set-telegram|test, selftest v3 (8 monitoring rows), bats notify/alert_state/health/monitor, tests/fake_telegram.py, docs/runbooks/monitoring.md, opskit/hub/README.md. Verify: opskit/bin/check -> ALL CHECKS PASSED incl. the monitoring rows.
 - 2026-10-04 Phase 3 (3.1-3.11): `opskit/{lib/{crypto,alert,prune,backup,restore,chatwoot_api}.sh, agent/backup.sh, templates/backup.cron.tmpl}`, schema `backup`, commands `backup run|list|verify`, `restore`, selftest v2, bats `backup_lib/backup_agent/backup_run`, `docs/runbooks/restore.md`. Verify: `OPSKIT_BUILD_CA=... opskit/bin/check` -> ALL CHECKS PASSED incl. SELFTEST PASSED (backup + restore test + overwrite protection rows).
 - 2026-10-04 Phase 2 (2.1-2.11): `aibot/Dockerfile`, `opskit/templates/*`, `opskit/lib/{secrets,render,deploy,checks,ssh}.sh`, `opskit/agent/bootstrap.sh`, `opskit/bin/opskit` (client new/render/deploy/check/pause/resume/offboard, host bootstrap, selftest), bats `render.bats` + `host.bats`, `docs/runbooks/deploy.md`. Verify: `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt opskit/bin/check` (sandbox) or `opskit/bin/check` (normal machine) -> ALL CHECKS PASSED incl. SELFTEST PASSED; manual: runbook `docs/runbooks/deploy.md`.
 - 2026-10-04 Phase 1 (1.1-1.10): `opskit/{bin,lib,schema,tests}`, `aibot/{pyproject.toml,src/aibot,tests}`, `.github/workflows/opskit-ci.yml`, `docs/HANDOVER.md`. Verify: `opskit/bin/check --quick` -> ALL CHECKS PASSED; `opskit/bin/opskit doctor`; `opskit/bin/opskit client validate opskit/tests/fixtures/client_shared.yaml` -> "V2" message. Not verified: the CI workflow itself (needs enabling on GitHub).
@@ -44,6 +45,20 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 4 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Stopping Sidekiq triggers a critical Telegram alert within 10 minutes | PASS (pretend Telegram) | selftest: sidekiq container stopped -> CRITICAL message at the first 5-minute cycle |
+| Stopping the stack triggers an uptime alert | PASS | selftest: whole stack stopped -> CRITICAL Website + Services |
+| A simulated disconnected inbox is reported | PASS | selftest: Google-style email inbox with missing credentials -> CRITICAL "needs to be re-connected"; fixed -> RESOLVED |
+| Hub-down fallback sends directly | PASS (by design: Telegram-only, ADR-016) | no hub exists; Telegram unreachable -> alert kept in outbox, exit 3, delivered next cycle |
+| De-duplication prevents repeats within 30 minutes | PASS | bats: exact 30-min boundary, flapping deferred; selftest: no repeat at +5 min; critical reminder at 2 h; one RESOLVED |
+| Quiet hours | PASS (bats, fake clock) | warnings held and released as one summary, spans midnight, uses client time zone; critical never held |
+| No secrets / message text in alerts | PASS | bats: token absent from logs and outbox; token passed to curl via stdin config, never argv; inbox names stripped of control characters |
+Bugs found and fixed during the phase: docker exec swallowing stdin inside a read loop (Sidekiq check wrongly critical), "HTTP 000000" status concatenation, image-build dependency on a rate-limited registry (now OPSKIT_AIBOT_IMAGE).
+NOT VERIFIED: real Telegram delivery, cron on a real host, certificate-expiry check on a real domain, hub flows (none exist), channel types without a reauthorization_required flag (Phase 6), "server dead" detection without an external heartbeat service (see opskit/hub/README.md).
+Test totals: 119 bats tests, 19 pytest, shellcheck clean.
+
 ### Phase 3 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|

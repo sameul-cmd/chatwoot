@@ -22,6 +22,11 @@ _require_local() {
 # for restricted networks (sandbox); normal builds need nothing.
 build_aibot_image() {
   local id="$1" args=()
+  # OPSKIT_AIBOT_IMAGE=<existing image> skips the build (offline / rate-limited registries; Phase 10 prebuilt images)
+  if [ -n "${OPSKIT_AIBOT_IMAGE:-}" ]; then
+    docker tag "$OPSKIT_AIBOT_IMAGE" "opskit-aibot:${id}" || die "cannot use OPSKIT_AIBOT_IMAGE=${OPSKIT_AIBOT_IMAGE}"
+    return 0
+  fi
   if [ -n "${OPSKIT_BUILD_CA:-}" ]; then
     args+=(--network host --secret "id=cabundle,src=${OPSKIT_BUILD_CA}")
     [ -n "${HTTPS_PROXY:-}" ] && args+=(--build-arg "HTTPS_PROXY=${HTTPS_PROXY}" --build-arg "HTTP_PROXY=${HTTPS_PROXY}")
@@ -97,6 +102,7 @@ deploy_client() {
   dc "$id" up -d >/dev/null
   wait_healthy "$id" "${OPSKIT_HEALTH_TIMEOUT:-300}" || return 1
   ensure_admin "$id"
+  ensure_monitor_user "$id" || log_warn "monitoring user not created: channel checks will report a warning until a deploy succeeds"
   log_info "deploy finished: $(_frontend_url "$id")"
 }
 
