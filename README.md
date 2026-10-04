@@ -1,3 +1,5 @@
+> **Fork notice (read first):** this is a fork of Chatwoot v4.18.0 with an operations kit and an AI first-reply bot added (`opskit/`, `aibot/`, `docs/`). To continue the work (you or an AI assistant): read **[`docs/NEXT.md`](docs/NEXT.md)** (what is done, what to do next), then **[`docs/ADOPT.md`](docs/ADOPT.md)**. Everything below is Chatwoot's own README.
+
 <img src="./.github/screenshots/header.png#gh-light-mode-only" width="100%" alt="Header light mode"/>
 <img src="./.github/screenshots/header-dark.png#gh-dark-mode-only" width="100%" alt="Header dark mode"/>
 

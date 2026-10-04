@@ -1,3 +1,5 @@
+> **Fork notice (read first):** the guidelines below are Chatwoot's and apply only when editing Chatwoot's own files, which this fork's project never does. To continue the project, read **`docs/NEXT.md`** (what is done, what to do next), then **`docs/ADOPT.md`**, before doing anything.
+
 # Chatwoot Development Guidelines
 
 ## Build / Test / Lint

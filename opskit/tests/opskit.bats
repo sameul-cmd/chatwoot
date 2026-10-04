@@ -134,6 +134,16 @@ setup() {
   [ "$status" -eq 0 ]
 }
 
+@test "fork notices: the two approved upstream edits are the first lines and are in the ledger" {
+  ROOT="$BATS_TEST_DIRNAME/../.."
+  head -n1 "$ROOT/README.md" | grep -q "Fork notice"
+  head -n1 "$ROOT/AGENTS.md" | grep -q "Fork notice"
+  grep -q '`README.md`' "$ROOT/docs/UPSTREAM_CHANGES.md"
+  grep -q '`AGENTS.md`' "$ROOT/docs/UPSTREAM_CHANGES.md"
+  grep -q "docs/NEXT.md" "$ROOT/README.md"
+  [ "$(test -f "$ROOT/docs/NEXT.md" && wc -l <"$ROOT/docs/NEXT.md")" -lt 80 ]
+}
+
 @test "reserved addons block accepted while disabled" {
   run "$OPSKIT" client validate "$FIX/client_addons_reserved.yaml"
   [ "$status" -eq 0 ]

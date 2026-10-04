@@ -22,7 +22,12 @@ done
 }
 
 ALLOWED='^(opskit/|aibot/|docs/|explore/|\.claude/|\.kilo/|\.kilocode/|\.cursor/|\.clinerules/|\.roo/|GEMINI\.md$|\.github/copilot-instructions\.md$|README-START-HERE\.md$|\.github/workflows/opskit-[^/]+\.yml$)'
-bad="$(git -C "$ROOT" diff --name-only "${PIN}" HEAD | grep -Ev "$ALLOWED" || true)"
+bad=""
+while IFS= read -r f; do
+  [ -n "$f" ] || continue
+  # an upstream file may differ only if the owner approved the patch and it is in the ledger (docs/UPSTREAM_CHANGES.md)
+  grep -qF "\`${f}\`" "$ROOT/docs/UPSTREAM_CHANGES.md" || bad+="${f}"$'\n'
+done < <(git -C "$ROOT" diff --name-only "${PIN}" HEAD | grep -Ev "$ALLOWED" || true)
 if [ -n "$bad" ]; then
   echo "files outside our paths changed vs ${PIN}:" >&2
   echo "$bad" >&2

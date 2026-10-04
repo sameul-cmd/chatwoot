@@ -9,7 +9,7 @@ You are taking over an existing project from another AI. Repository: https://git
 Branch: claude/wizardly-babbage-ui2rpa  (work on this branch only; never push anywhere else without asking me)
 
 1. Clone it and check out that branch.
-2. Read these fully, in order: docs/ADOPT.md, docs/PROGRESS.md, then the phase file that ADOPT.md section 6 tells you to do next.
+2. Read these fully, in order: docs/NEXT.md (short: what is done, what to do next), docs/ADOPT.md, docs/PROGRESS.md, then the plan file NEXT.md tells you to do next.
 3. Follow docs/ADOPT.md exactly. I am not technical: explain in plain words, number any step I must do, and say honestly what is NOT verified.
 4. Before writing any code, tell me: the phase and task you will do next, the files you will touch, and anything you need from me.
 Do not trust your memory of this project: trust the files.
@@ -31,7 +31,7 @@ The repo contains small auto-loaded rule files that point to this guide, so for 
 The tool needs to be able to run shell commands and Docker for building and verifying. Model quality matters: pick the strongest coding model your tool offers, because this project has many small rules (verify before claiming, never print secrets, never edit Chatwoot's files).
 
 ## 2. What this project is (one paragraph)
-A sellable "AI inbox service" for small businesses (Bangladesh first). The owner installs **one Chatwoot Community Edition per client** (open source support inbox: website chat, email, Telegram, WhatsApp, Facebook, Instagram) and adds our kit on top: **opskit** (Bash tools: deploy, backup/restore, monitoring with Telegram alerts, safe upgrades, channel checks, industry starter packs, reports) and **aibot** (Python service: an AI first-reply bot that answers only from the client's own FAQ in Bangla/English and hands off to humans). The repo is a fork of `chatwoot/chatwoot` pinned to release **v4.18.0**. Our code lives only in `opskit/`, `aibot/`, `docs/`, `.claude/`, `explore/` and `.github/workflows/opskit-*.yml`; **every other file is Chatwoot's and must not be edited** (a test enforces it).
+A sellable "AI inbox service" for small businesses (Bangladesh first). The owner installs **one Chatwoot Community Edition per client** (open source support inbox: website chat, email, Telegram, WhatsApp, Facebook, Instagram) and adds our kit on top: **opskit** (Bash tools: deploy, backup/restore, monitoring with Telegram alerts, safe upgrades, channel checks, industry starter packs, reports) and **aibot** (Python service: an AI first-reply bot that answers only from the client's own FAQ in Bangla/English and hands off to humans). The repo is a fork of `chatwoot/chatwoot` pinned to release **v4.18.0**. Our code lives only in `opskit/`, `aibot/`, `docs/`, `.claude/`, `explore/` and `.github/workflows/opskit-*.yml`; **every other file is Chatwoot's and must not be edited** (a test enforces it). The only approved exceptions are the fork-notice banners at the top of the root `README.md` and `AGENTS.md`, listed in the patch ledger `docs/UPSTREAM_CHANGES.md`; keep them when syncing a new Chatwoot release.
 
 ## 3. Who the owner is and how to talk to them
 Non-technical / semi-technical, works from several laptops, wants to sell this as a side business. Use plain words and define any jargon. Give **numbered "do this" steps** for anything they must do (never ask them to type commands unless unavoidable; then give the exact text). Say what can be skipped and what you will handle. Be honest: "verified" only if you ran it; otherwise say "NOT verified". Never ask them to paste a key or password into chat: keys go into environment settings or files on their own machine.
@@ -55,7 +55,7 @@ Non-technical / semi-technical, works from several laptops, wants to sell this a
 - Lessons that cost hours before: quote heredocs (`<<'EOF'`); `docker compose exec` inside a `while read` loop swallows the loop's input (add `</dev/null`); **never `pkill -f` a pattern that appears in your own command line** (kill by exact PID); the API header through Caddy must be `api-access-token` (with dashes); a replaced bind-mounted file needs `up -d --force-recreate`; long runs go in the background with a log; waiting loops must not match their own command line.
 
 ## 6. State right now and what to do next
-**Always read `docs/PROGRESS.md` first** (it is kept current; this section may lag).
+**`docs/NEXT.md` is the always-current short version of this section: read it first.** Then `docs/PROGRESS.md` for the history.
 
 | Phase | What | State |
 |---|---|---|
@@ -81,7 +81,7 @@ Non-technical / semi-technical, works from several laptops, wants to sell this a
 4. **Run it live** on the demo stack (`opskit client new demo --local ...`, `opskit client deploy demo`); fix what only the live run reveals.
 5. **Verify**: `opskit/bin/check` (full) plus `opskit/bin/opskit selftest`; add selftest rows for new behaviour; do a security review (no secrets/PII printed, probes read-only, permissions).
 6. **Record**: verification report in `docs/PROGRESS.md` (criterion / result / evidence, then NOT VERIFIED, then owner to-dos), ADR in `docs/DECISIONS.md` for design choices, `docs/ASSUMPTIONS.md` rows for judgement calls, `docs/ENVIRONMENT.md` for new variables, a runbook in `docs/runbooks/` for anything an operator does.
-7. **Commit and push** to the branch; summarise for the owner in plain words with their next steps.
+7. **Update `docs/NEXT.md`** (status table, "what to do right now", waiting-on-owner list, last check result; keep it under 80 lines), then **commit and push** to the branch and summarise for the owner in plain words with their next steps. A task is not finished until NEXT.md is current.
 
 ## 8. Map of the repo (ours)
 `docs/SPEC.md` source of truth · `docs/PROGRESS.md` status and reports · `docs/DECISIONS.md` ADRs · `docs/ASSUMPTIONS.md` · `docs/TECH_ARCHITECTURE.md` · `docs/ENVIRONMENT.md` · `docs/EXPLORATION_REPORT.md` (verified Chatwoot facts) · `docs/runbooks/` (operator how-tos) · `docs/tasks/` (phase plans) · `opskit/{bin,lib,agent,templates,schema,data,packs,tests}` · `aibot/{src/aibot,tests,demo}` · `.claude/` (Claude Code's own copy of the rules and slash commands) · `.kilocode/`, `.kilo/`, `.cursor/`, `.clinerules/`, `.roo/`, `GEMINI.md`, `.github/copilot-instructions.md` (tiny auto-loaded pointers to this file for other tools).
