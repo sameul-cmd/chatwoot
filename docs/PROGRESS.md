@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 1 — Opskit foundation (tasks 1.1-1.10 done, verification pending)
-- **Current task:** `/start-phase` for Phase 2 (Phase 1 verified; GitHub Actions deliberately stays OFF, see Setup notes)
+- **Current task:** Phase 2 plan written (`docs/tasks/phase-2.md`); waiting for owner approval of its 5 open questions (secrets involved), then start 2.1 (Phase 1 verified; GitHub Actions deliberately stays OFF, see Setup notes)
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 0 | Fork, set up & explore Chatwoot | Done on cloud sandbox; owner-account tests (Telegram, email, WhatsApp, Meta) and Bengali UI check pending on owner device | cloud-verified 2026-10-04 |
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
-| 2 | Client deployment kit | Not started | — |
+| 2 | Client deployment kit | Planned (task file ready, awaiting owner approval) | — |
 | 3 | Backups & restore | Not started | — |
 | 4 | Monitoring & alerts via shared ops-hub | Not started | — |
 | 5 | Safe upgrades | Not started | — |
