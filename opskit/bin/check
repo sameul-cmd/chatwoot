@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Run all checks: shellcheck, bats, aibot (ruff, mypy, pytest). --quick skips docker integration tests.
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+QUICK=0
+[ "${1:-}" = "--quick" ] && QUICK=1
+export OPSKIT_QUICK="$QUICK"
+
+failed=()
+step() {
+  local name="$1"
+  shift
+  printf '\n== %s ==\n' "$name"
+  if "$@"; then printf 'PASS %s\n' "$name"; else
+    printf 'FAIL %s\n' "$name"
+    failed+=("$name")
+  fi
+}
+
+shell_files() {
+  { git -C "$ROOT" ls-files 'opskit/bin/*' 'opskit/lib/*.sh' 'opskit/agent/*.sh' 'opskit/tests/*.bash'
+    git -C "$ROOT" ls-files --others --exclude-standard 'opskit/bin/*' 'opskit/lib/*.sh' 'opskit/agent/*.sh' 'opskit/tests/*.bash'; } | sort -u
+}
+
+run_shellcheck() {
+  local files
+  mapfile -t files < <(shell_files)
+  [ "${#files[@]}" -gt 0 ] || return 0
+  (cd "$ROOT" && shellcheck -x -P SCRIPTDIR "${files[@]}")
+}
+
+run_bats() {
+  bats "$ROOT/opskit/tests"
+}
+
+run_aibot() {
+  (cd "$ROOT/aibot" && uv run --quiet ruff check . && uv run --quiet mypy src && uv run --quiet pytest -q)
+}
+
+step shellcheck run_shellcheck
+step bats run_bats
+step aibot run_aibot
+if [ "$QUICK" -eq 0 ]; then
+  echo
+  echo "(no docker integration tests yet - added from Phase 2)"
+fi
+
+echo
+if [ "${#failed[@]}" -eq 0 ]; then
+  echo "ALL CHECKS PASSED"
+else
+  echo "FAILED: ${failed[*]}"
+  exit 1
+fi

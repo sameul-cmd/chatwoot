@@ -1,0 +1,6 @@
+industry: fcommerce
+items:
+  - key: greeting
+    bn: "আসসালামু আলাইকুম! কীভাবে সাহায্য করতে পারি?"
+    en: "Hello! How can I help you?"
+    review_required: true

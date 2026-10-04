@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/llm.schema.json",
+  "title": "BYOK LLM settings (ADR-011): any OpenAI-compatible endpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["base_url", "model"],
+  "properties": {
+    "base_url": {
+      "type": "string",
+      "pattern": "^https?://[^\\s]+$",
+      "description": "OpenAI-compatible API root, e.g. https://api.openai.com/v1"
+    },
+    "api_key_env": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9_]*$",
+      "default": "AIBOT_LLM_API_KEY",
+      "description": "Name of the environment variable holding the key. The key itself never goes in this file."
+    },
+    "model": { "type": "string", "minLength": 1 },
+    "effort": {
+      "enum": ["none", "low", "medium", "high", "max"],
+      "default": "medium",
+      "description": "Reasoning effort. 'max' is mapped per endpoint (see ASSUMPTIONS A-001)."
+    },
+    "effort_param": {
+      "type": "string",
+      "minLength": 1,
+      "default": "reasoning_effort",
+      "description": "Request field that carries the effort value."
+    },
+    "max_output_tokens": { "type": "integer", "minimum": 16, "maximum": 32000, "default": 800 }
+  }
+}

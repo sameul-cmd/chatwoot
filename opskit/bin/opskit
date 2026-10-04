@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+# opskit - Chatwoot operations kit. Subcommands are added phase by phase (see docs/SPEC.md section 17).
+set -euo pipefail
+
+OPSKIT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export OPSKIT_ROOT
+# shellcheck source=../lib/log.sh
+. "$OPSKIT_ROOT/lib/log.sh"
+# shellcheck source=../lib/confirm.sh
+. "$OPSKIT_ROOT/lib/confirm.sh"
+# shellcheck source=../lib/validate.sh
+. "$OPSKIT_ROOT/lib/validate.sh"
+
+usage() {
+  cat <<'EOF'
+Usage: opskit <command> [args]
+
+Commands:
+  doctor                      check required tools
+  client validate <file>      validate a client.yaml against the schema
+  bot validate <file>         validate a bot.yaml against the schema
+  pack validate <file>        validate a pack item file against the schema
+  llm models|effort <client>  BYOK model picker / effort (available in Phase 8)
+  selftest                    end-to-end local self test (available from Phase 2)
+  help                        show this help
+EOF
+}
+
+# Tools: name|hint
+REQUIRED_TOOLS="bash|bash 4+ ;git|apt install git ;curl|apt install curl ;openssl|apt install openssl ;jq|apt install jq ;yq|install mikefarah yq ;envsubst|apt install gettext-base ;shellcheck|apt install shellcheck ;bats|apt install bats ;python3|apt install python3 ;docker|install Docker Engine/Desktop ;age|apt install age ;rclone|apt install rclone"
+
+cmd_doctor() {
+  local missing=0 entry name hint
+  local IFS=';'
+  for entry in $REQUIRED_TOOLS; do
+    name="${entry%%|*}"
+    hint="${entry#*|}"
+    if command -v "$name" >/dev/null 2>&1; then
+      printf 'ok       %s\n' "$name"
+    else
+      printf 'MISSING  %s  (%s)\n' "$name" "$hint"
+      missing=1
+    fi
+  done
+  IFS=$' \t\n'
+  if python3 -c 'import jsonschema, yaml, referencing' >/dev/null 2>&1; then
+    printf 'ok       python: jsonschema, pyyaml\n'
+  else
+    printf 'MISSING  python packages jsonschema, pyyaml  (pip install jsonschema pyyaml)\n'
+    missing=1
+  fi
+  return "$missing"
+}
+
+cmd_validate() {
+  local kind="$1" file="${2:-}"
+  [ -n "$file" ] || {
+    log_error "usage: opskit ${kind} validate <file>"
+    return 2
+  }
+  [ -f "$file" ] || die "file not found: $file"
+  if python3 "$OPSKIT_ROOT/lib/schema_check.py" "$kind" "$file"; then
+    echo "valid: $file"
+  else
+    return 1
+  fi
+}
+
+main() {
+  local cmd="${1:-help}"
+  shift || true
+  case "$cmd" in
+    help | -h | --help) usage ;;
+    doctor) cmd_doctor ;;
+    client | bot | pack)
+      local sub="${1:-}"
+      shift || true
+      case "$sub" in
+        validate) cmd_validate "$cmd" "$@" ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    llm)
+      echo "opskit llm: available in Phase 8 (BYOK model picker, ADR-011)" >&2
+      exit 3
+      ;;
+    selftest)
+      echo "opskit selftest: available from Phase 2" >&2
+      exit 3
+      ;;
+    *)
+      usage >&2
+      exit 2
+      ;;
+  esac
+}
+
+main "$@"

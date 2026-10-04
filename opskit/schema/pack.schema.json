@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/pack.schema.json",
+  "title": "Industry pack item list (canned responses, labels, auto replies)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["industry", "items"],
+  "properties": {
+    "industry": { "enum": ["generic", "fcommerce", "clinic", "travel", "education", "service"] },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["key", "bn", "en"],
+        "properties": {
+          "key": { "type": "string", "pattern": "^[a-z0-9_]+$" },
+          "bn": { "type": "string", "minLength": 1 },
+          "en": { "type": "string", "minLength": 1 },
+          "review_required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Bangla text stays true until the owner (native speaker) approves it."
+          }
+        }
+      }
+    }
+  }
+}

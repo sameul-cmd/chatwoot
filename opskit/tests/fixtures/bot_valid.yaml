@@ -1,0 +1,10 @@
+enabled: true
+min_confidence: 0.7
+max_bot_turns: 3
+handoff_keywords:
+  en: [human, agent]
+  bn: [মানুষ, এজেন্ট]
+llm:
+  base_url: http://localhost:11434/v1
+  model: llama3.1
+  effort: low
