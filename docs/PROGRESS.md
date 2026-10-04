@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 5 - Safe upgrades (planned)
-- **Current task:** Phase 5 plan written (`docs/tasks/phase-5.md`); waiting for owner approval of its 7 open questions (upgrade/rollback logic on live inboxes), then start 5.1
+- **Current phase:** Phase 5 - Safe upgrades (done, verified locally)
+- **Current task:** `/start-phase` for Phase 6 (Channel runbooks & checkers) when the owner says go
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -13,7 +13,7 @@
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
-| 5 | Safe upgrades | Planned (task file ready, awaiting owner approval) | — |
+| 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Not started | — |
 | 7 | Industry starter packs bn + en | Not started | — |
 | 8 | aibot | Not started | — |
@@ -23,6 +23,7 @@
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
+- 2026-10-04 Phase 5 (5.1-5.11): opskit/lib/{upgrade,smoke}.sh, opskit/bin/sync-rehearsal, schema upgrade_window + support, backup manifest schema_version, command `upgrade <id> --to <tag> --info|--stage|--apply`, `client new --tag`, selftest upgrade, bats upgrade/sync_rehearsal, docs/runbooks/upgrade.md + upgrade-checklist.md. Verify: opskit/bin/check -> ALL CHECKS PASSED incl. SELFTEST UPGRADE PASSED.
 - 2026-10-04 Phase 4 (4.1-4.10): opskit/lib/{notify,alert_state,health,channels_health,monitor}.sh, templates/rails/ensure_monitor.rb, templates/monitor.cron.tmpl, schema alerts, commands monitor run|status and alerts set-telegram|test, selftest v3 (8 monitoring rows), bats notify/alert_state/health/monitor, tests/fake_telegram.py, docs/runbooks/monitoring.md, opskit/hub/README.md. Verify: opskit/bin/check -> ALL CHECKS PASSED incl. the monitoring rows.
 - 2026-10-04 Phase 3 (3.1-3.11): `opskit/{lib/{crypto,alert,prune,backup,restore,chatwoot_api}.sh, agent/backup.sh, templates/backup.cron.tmpl}`, schema `backup`, commands `backup run|list|verify`, `restore`, selftest v2, bats `backup_lib/backup_agent/backup_run`, `docs/runbooks/restore.md`. Verify: `OPSKIT_BUILD_CA=... opskit/bin/check` -> ALL CHECKS PASSED incl. SELFTEST PASSED (backup + restore test + overwrite protection rows).
 - 2026-10-04 Phase 2 (2.1-2.11): `aibot/Dockerfile`, `opskit/templates/*`, `opskit/lib/{secrets,render,deploy,checks,ssh}.sh`, `opskit/agent/bootstrap.sh`, `opskit/bin/opskit` (client new/render/deploy/check/pause/resume/offboard, host bootstrap, selftest), bats `render.bats` + `host.bats`, `docs/runbooks/deploy.md`. Verify: `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt opskit/bin/check` (sandbox) or `opskit/bin/check` (normal machine) -> ALL CHECKS PASSED incl. SELFTEST PASSED; manual: runbook `docs/runbooks/deploy.md`.
@@ -45,6 +46,20 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 5 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Upgrading a demo client from the previous to the pinned release passes staging and production smoke tests | PASS | live + selftest upgrade: v4.17.1-ce -> v4.18.0-ce; rehearsal on a copy (93 s, 3 migrations applied) then live upgrade (~70 s); both smoke suites 9/9 PASS + 1 WARN (bot reply skipped); version 4.18.0, migrations 177 -> 180, conversation + attachment intact |
+| Injected smoke failure triggers rollback with data intact | PASS | OPSKIT_UPGRADE_FAIL_SMOKE=production: rolled back to v4.17.1-ce, database restored (version changed), smoke tests on the old version PASS with exact data match (strict), 177 migrations and the conversation restored, critical alert written, history line `rolled_back` |
+| Fork sync rehearsal | PASS | `sync-rehearsal v4.17.1 v4.18.0` on the real repo: kit applied on v4.17.1, v4.18.0 merged cleanly, only our paths differ; real HEAD unchanged, no worktree left; bats covers conflicts + ledger rule |
+| Preflight refusals | PASS (bats) | same/older/non-CE tag, unhealthy stack, missing/failed/stale (24 h) rehearsal, outside the window (+ --outage-fix override) |
+| Off-hours window | PASS (bats, fake clock) | 01:00 inclusive - 05:00 exclusive in the client time zone, custom window, anytime mode, local stacks exempt |
+| Release information | PASS | live: 123 commits, 3 migrations, new setting SLACK_SIGNING_SECRET, compose unchanged; bats on a fixture repo |
+| History + safety | PASS | one JSON line per attempt (no secrets); typed client id + `--yes` for the live upgrade; dated client.yaml copies |
+Bugs found and fixed during the phase: `coalesce(max(version),0)` on a text column (backup failed on a real database while the fake-docker unit test passed); rehearsal initially ignored patched upstream files; apply-failure message for non-applying kit.
+NOT VERIFIED: upgrade on a real server/large database, multi-version jumps, WhatsApp/Telegram behaviour during the downtime, the bot reply check (Phase 8), real Telegram messages for started/finished/rolled back.
+Test totals: 142 bats tests, 19 pytest, shellcheck clean.
+
 ### Phase 4 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|
