@@ -1,0 +1,17 @@
+industry: service
+items:
+  - key: booking
+    color: "#1f93ff"
+    description: "Wants to book a service"
+  - key: quote
+    color: "#f5a623"
+    description: "Asks for a price or estimate"
+  - key: reschedule
+    color: "#7ed321"
+    description: "Wants to change the visit time"
+  - key: complaint
+    color: "#d0021b"
+    description: "Unhappy customer or a problem after the visit"
+  - key: follow_up
+    color: "#9013fe"
+    description: "Needs a follow-up call or message"

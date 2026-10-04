@@ -1,0 +1,16 @@
+industry: travel
+items:
+  - key: quote
+    title: "Package words"
+    label: quote
+    keywords:
+      en: ["package", "tour", "price"]
+      bn: ["প্যাকেজ", "ট্যুর", "দাম"]
+    review_required: true
+  - key: visa
+    title: "Visa words"
+    label: visa
+    keywords:
+      en: ["visa", "passport"]
+      bn: ["ভিসা", "পাসপোর্ট"]
+    review_required: true

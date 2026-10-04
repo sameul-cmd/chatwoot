@@ -1,0 +1,50 @@
+industry: generic
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: offer
+    question:
+      en: "What do you offer?"
+      bn: "আপনারা কী কী দেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: pricing
+    question:
+      en: "How much does it cost?"
+      bn: "খরচ কত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: support
+    question:
+      en: "How can I get help after buying?"
+      bn: "কেনার পরে সাহায্য কীভাবে পাব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

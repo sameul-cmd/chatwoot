@@ -1,0 +1,34 @@
+industry: service
+items:
+  - key: greeting
+    en: "Hello {{contact.name}}, thank you for messaging us. How can we help you today?"
+    bn: "হ্যালো {{contact.name}}, আমাদের মেসেজ করার জন্য ধন্যবাদ। আজ আমরা আপনাকে কীভাবে সাহায্য করতে পারি?"
+    review_required: true
+  - key: handoff_human
+    en: "I am passing your conversation to a team member who will reply soon."
+    bn: "আমি আপনার কথোপকথনটি আমাদের একজন সদস্যের কাছে পাঠিয়ে দিচ্ছি, তিনি শীঘ্রই উত্তর দেবেন।"
+    review_required: true
+  - key: thanks
+    en: "Thank you for contacting us. Have a great day!"
+    bn: "আমাদের সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিনটি শুভ হোক!"
+    review_required: true
+  - key: booking_ask
+    en: "Which service do you need, at what address, and when would you like us to come?"
+    bn: "আপনার কোন সার্ভিস দরকার, কোন ঠিকানায় এবং কখন আমাদের যেতে বলবেন?"
+    review_required: true
+  - key: booking_received
+    en: "We have noted your booking request and will confirm the visit time shortly."
+    bn: "আপনার বুকিংয়ের অনুরোধ আমরা নোট করেছি এবং শীঘ্রই ভিজিটের সময় নিশ্চিত করব।"
+    review_required: true
+  - key: quote
+    en: "The estimated charge for [service] is [price]. The final amount depends on the work needed."
+    bn: "[সার্ভিস]-এর আনুমানিক খরচ [দাম]। প্রয়োজনীয় কাজের ওপর চূড়ান্ত খরচ নির্ভর করবে।"
+    review_required: true
+  - key: visit_reminder
+    en: "A technician will contact you before arriving. Please keep your phone nearby."
+    bn: "আসার আগে আমাদের টেকনিশিয়ান আপনার সাথে যোগাযোগ করবেন। অনুগ্রহ করে ফোন কাছে রাখবেন।"
+    review_required: true
+  - key: warranty_info
+    en: "Warranty on this work: [warranty terms]."
+    bn: "এই কাজের ওয়ারেন্টি: [ওয়ারেন্টির শর্ত]।"
+    review_required: true

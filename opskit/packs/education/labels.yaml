@@ -1,0 +1,17 @@
+industry: education
+items:
+  - key: admission
+    color: "#1f93ff"
+    description: "Admission or enrolment enquiry"
+  - key: course
+    color: "#7ed321"
+    description: "Asks about a course"
+  - key: fee
+    color: "#f5a623"
+    description: "Asks about fees"
+  - key: schedule
+    color: "#9013fe"
+    description: "Asks about class times"
+  - key: complaint
+    color: "#d0021b"
+    description: "Unhappy parent or student"

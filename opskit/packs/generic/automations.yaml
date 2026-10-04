@@ -1,0 +1,16 @@
+industry: generic
+items:
+  - key: price
+    title: "Price words"
+    label: price
+    keywords:
+      en: ["price", "cost", "how much", "rate"]
+      bn: ["দাম", "মূল্য", "খরচ", "রেট"]
+    review_required: true
+  - key: complaint
+    title: "Complaint words"
+    label: complaint
+    keywords:
+      en: ["complaint", "problem", "not happy", "refund"]
+      bn: ["অভিযোগ", "সমস্যা", "অসন্তুষ্ট", "ফেরত"]
+    review_required: true

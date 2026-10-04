@@ -1,0 +1,66 @@
+industry: travel
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: packages
+    question:
+      en: "Which packages do you offer?"
+      bn: "আপনাদের কী কী প্যাকেজ আছে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: documents
+    question:
+      en: "Which documents do I need?"
+      bn: "কোন কোন কাগজপত্র লাগবে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: payment
+    question:
+      en: "How can I pay, and can I pay in instalments?"
+      bn: "কীভাবে পেমেন্ট করব, আর কিস্তিতে দেওয়া যায় কি?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: cancel
+    question:
+      en: "What is the cancellation policy?"
+      bn: "বাতিলের নীতি কী?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: visa
+    question:
+      en: "Do you help with visas?"
+      bn: "আপনারা কি ভিসার ব্যাপারে সাহায্য করেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

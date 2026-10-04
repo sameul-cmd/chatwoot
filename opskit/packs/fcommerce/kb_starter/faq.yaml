@@ -1,0 +1,90 @@
+industry: fcommerce
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: how_to_order
+    question:
+      en: "How do I place an order?"
+      bn: "কীভাবে অর্ডার করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: payment_methods
+    question:
+      en: "Which payment methods do you accept?"
+      bn: "আপনারা কোন কোন পেমেন্ট পদ্ধতি নেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: cod
+    question:
+      en: "Do you offer cash on delivery?"
+      bn: "ক্যাশ অন ডেলিভারি আছে কি?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: delivery_time
+    question:
+      en: "How long does delivery take?"
+      bn: "ডেলিভারিতে কত সময় লাগে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: delivery_charge
+    question:
+      en: "What is the delivery charge?"
+      bn: "ডেলিভারি চার্জ কত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: return_policy
+    question:
+      en: "What is your return and exchange policy?"
+      bn: "আপনাদের রিটার্ন ও এক্সচেঞ্জ নীতি কী?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: stock
+    question:
+      en: "Is this product available?"
+      bn: "এই পণ্যটি কি পাওয়া যাচ্ছে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: size_guide
+    question:
+      en: "How do I choose the right size?"
+      bn: "সঠিক সাইজ কীভাবে বেছে নেব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

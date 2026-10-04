@@ -1,0 +1,44 @@
+industry: fcommerce
+items:
+  - key: order
+    title: "Order words"
+    label: order
+    keywords:
+      en: ["order", "buy", "purchase", "confirm"]
+      bn: ["অর্ডার", "কিনতে", "কিনব", "নিতে চাই"]
+    review_required: true
+  - key: price
+    title: "Price words"
+    label: price
+    keywords:
+      en: ["price", "cost", "how much", "rate"]
+      bn: ["দাম", "মূল্য", "প্রাইস", "রেট"]
+    review_required: true
+  - key: delivery
+    title: "Delivery words"
+    label: delivery
+    keywords:
+      en: ["delivery", "shipping", "courier"]
+      bn: ["ডেলিভারি", "শিপিং", "কুরিয়ার"]
+    review_required: true
+  - key: payment
+    title: "Payment words"
+    label: payment
+    keywords:
+      en: ["payment", "bkash", "nagad", "cash on delivery"]
+      bn: ["পেমেন্ট", "বিকাশ", "নগদ", "ক্যাশ অন ডেলিভারি"]
+    review_required: true
+  - key: complaint
+    title: "Complaint words"
+    label: complaint
+    keywords:
+      en: ["complaint", "wrong item", "damaged", "refund", "not received"]
+      bn: ["অভিযোগ", "ভুল", "নষ্ট", "ফেরত", "পাইনি"]
+    review_required: true
+  - key: return
+    title: "Return words"
+    label: return
+    keywords:
+      en: ["return", "exchange"]
+      bn: ["রিটার্ন", "এক্সচেঞ্জ"]
+    review_required: true

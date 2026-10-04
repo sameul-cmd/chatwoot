@@ -1,0 +1,16 @@
+industry: clinic
+items:
+  - key: appointment
+    title: "Appointment words"
+    label: appointment
+    keywords:
+      en: ["appointment", "booking", "doctor"]
+      bn: ["অ্যাপয়েন্টমেন্ট", "সিরিয়াল", "ডাক্তার"]
+    review_required: true
+  - key: emergency
+    title: "Emergency words"
+    label: emergency
+    keywords:
+      en: ["emergency", "urgent", "ambulance"]
+      bn: ["জরুরি", "ইমার্জেন্সি", "অ্যাম্বুলেন্স"]
+    review_required: true

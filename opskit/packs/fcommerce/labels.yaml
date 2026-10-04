@@ -1,0 +1,23 @@
+industry: fcommerce
+items:
+  - key: order
+    color: "#1f93ff"
+    description: "Customer wants to order"
+  - key: price
+    color: "#f5a623"
+    description: "Customer asks about price"
+  - key: delivery
+    color: "#7ed321"
+    description: "Delivery or courier question"
+  - key: payment
+    color: "#9013fe"
+    description: "Payment question or proof of payment"
+  - key: complaint
+    color: "#d0021b"
+    description: "Wrong, damaged or missing item, or an unhappy customer"
+  - key: return
+    color: "#8b572a"
+    description: "Return or exchange request"
+  - key: vip
+    color: "#ffd700"
+    description: "Repeat or important customer"

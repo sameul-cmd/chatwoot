@@ -37,6 +37,7 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 
 | `TELEGRAM_BOT_TOKEN`, `TELEGRAM_CHAT_ID` | operator shell, only at `opskit alerts set-telegram` | saved to `clients/<id>/alerts.env` (mode 600); `TELEGRAM_API_BASE` overrides the API URL (tests) |
 | `TELEGRAM_API_BASE`, `META_GRAPH_BASE`, `META_GRAPH_VERSION` | tests / channel checks | override the Telegram API URL and the Meta Graph URL/version used by read-only channel probes (default `https://api.telegram.org`, `https://graph.facebook.com`) |
+| `OPSKIT_PACKS_DIR` | tests | use another folder of packs than `opskit/packs` |
 | `OPSKIT_HEARTBEAT_URL` | host | external dead-man's-switch ping (healthchecks.io / UptimeRobot) called after each host monitor run |
 | `OPSKIT_STATE_NOW`, `OPSKIT_NOW` | tests/selftest | fake clocks: decision clock only / all clocks |
 | `OPSKIT_AIBOT_IMAGE` | operator shell | use an existing image for the bot instead of building (offline / rate-limited / Phase 10) |

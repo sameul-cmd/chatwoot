@@ -1,0 +1,16 @@
+industry: service
+items:
+  - key: booking
+    title: "Booking words"
+    label: booking
+    keywords:
+      en: ["booking", "service", "repair"]
+      bn: ["বুকিং", "সার্ভিস", "মেরামত"]
+    review_required: true
+  - key: quote
+    title: "Quote words"
+    label: quote
+    keywords:
+      en: ["price", "quote", "estimate"]
+      bn: ["দাম", "কোটেশন", "খরচ"]
+    review_required: true

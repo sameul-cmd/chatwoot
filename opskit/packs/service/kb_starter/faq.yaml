@@ -1,0 +1,74 @@
+industry: service
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: services
+    question:
+      en: "Which services do you offer?"
+      bn: "আপনারা কী কী সার্ভিস দেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: areas
+    question:
+      en: "Which areas do you serve?"
+      bn: "আপনারা কোন কোন এলাকায় সার্ভিস দেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: booking
+    question:
+      en: "How do I book a service?"
+      bn: "কীভাবে সার্ভিস বুক করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: price
+    question:
+      en: "How is the price decided?"
+      bn: "খরচ কীভাবে ঠিক হয়?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: warranty
+    question:
+      en: "Is there a warranty on the work?"
+      bn: "কাজের ওপর কি ওয়ারেন্টি আছে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: reschedule
+    question:
+      en: "Can I change the visit time?"
+      bn: "ভিজিটের সময় কি বদলানো যায়?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

@@ -1,0 +1,17 @@
+industry: clinic
+items:
+  - key: appointment
+    color: "#1f93ff"
+    description: "Wants to book or ask about an appointment"
+  - key: reschedule
+    color: "#f5a623"
+    description: "Wants to change or cancel an appointment"
+  - key: report
+    color: "#7ed321"
+    description: "Asks about test reports"
+  - key: emergency
+    color: "#d0021b"
+    description: "Says it is urgent: hand over to a person at once"
+  - key: complaint
+    color: "#8b572a"
+    description: "Unhappy patient or a problem"

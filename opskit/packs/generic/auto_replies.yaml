@@ -1,0 +1,10 @@
+industry: generic
+csat: true
+greeting:
+  en: "Hello! Thank you for contacting us. A team member will reply shortly."
+  bn: "হ্যালো! আমাদের সাথে যোগাযোগ করার জন্য ধন্যবাদ। আমাদের একজন সদস্য শীঘ্রই উত্তর দেবেন।"
+  review_required: true
+out_of_office:
+  en: "Thank you for your message. We are closed right now and will reply as soon as we open."
+  bn: "আপনার মেসেজের জন্য ধন্যবাদ। আমরা এখন বন্ধ আছি এবং খোলার সাথে সাথেই উত্তর দেব।"
+  review_required: true

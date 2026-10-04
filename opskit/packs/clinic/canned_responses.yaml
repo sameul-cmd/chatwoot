@@ -1,0 +1,34 @@
+industry: clinic
+items:
+  - key: greeting
+    en: "Hello {{contact.name}}, thank you for messaging us. How can we help you today?"
+    bn: "হ্যালো {{contact.name}}, আমাদের মেসেজ করার জন্য ধন্যবাদ। আজ আমরা আপনাকে কীভাবে সাহায্য করতে পারি?"
+    review_required: true
+  - key: handoff_human
+    en: "I am passing your conversation to a team member who will reply soon."
+    bn: "আমি আপনার কথোপকথনটি আমাদের একজন সদস্যের কাছে পাঠিয়ে দিচ্ছি, তিনি শীঘ্রই উত্তর দেবেন।"
+    review_required: true
+  - key: thanks
+    en: "Thank you for contacting us. Have a great day!"
+    bn: "আমাদের সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিনটি শুভ হোক!"
+    review_required: true
+  - key: appointment_ask
+    en: "To request an appointment, please send the patient's name, age group, phone number, preferred day and the reason for the visit."
+    bn: "অ্যাপয়েন্টমেন্টের অনুরোধ করতে অনুগ্রহ করে রোগীর নাম, বয়সের ধরন, ফোন নম্বর, পছন্দের দিন ও আসার কারণ পাঠান।"
+    review_required: true
+  - key: appointment_received
+    en: "We have noted your appointment request and will confirm the time with you shortly."
+    bn: "আপনার অ্যাপয়েন্টমেন্টের অনুরোধ আমরা নোট করেছি এবং শীঘ্রই সময় নিশ্চিত করে জানাব।"
+    review_required: true
+  - key: doctor_availability
+    en: "Dr. [doctor name] is available on [days and time]."
+    bn: "ডা. [ডাক্তারের নাম] [দিন ও সময়] উপলব্ধ আছেন।"
+    review_required: true
+  - key: emergency_notice
+    en: "If this is an emergency, please call your local emergency number or go to the nearest hospital right away. We cannot give medical advice in chat."
+    bn: "এটি জরুরি হলে এখনই আপনার এলাকার জরুরি নম্বরে ফোন করুন বা নিকটতম হাসপাতালে যান। চ্যাটে আমরা চিকিৎসা পরামর্শ দিতে পারি না।"
+    review_required: true
+  - key: reschedule
+    en: "Would you like to change your appointment time? Please tell us the day that suits you."
+    bn: "আপনি কি অ্যাপয়েন্টমেন্টের সময় বদলাতে চান? আপনার সুবিধাজনক দিনটি জানান।"
+    review_required: true

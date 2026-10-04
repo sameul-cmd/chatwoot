@@ -1,0 +1,16 @@
+industry: education
+items:
+  - key: admission
+    title: "Admission words"
+    label: admission
+    keywords:
+      en: ["admission", "enroll", "join"]
+      bn: ["ভর্তি", "এনরোল"]
+    review_required: true
+  - key: fee
+    title: "Fee words"
+    label: fee
+    keywords:
+      en: ["fee", "fees", "tuition"]
+      bn: ["ফি", "বেতন", "টিউশন"]
+    review_required: true

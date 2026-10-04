@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 6 done locally; next: Phase 7 (industry packs) when the owner says go
-- **Current task:** Phase 7 in progress (7.2-7.3 data format and packs being written; 7.1 live checks next)
+- **Current phase:** Phase 7 - Industry starter packs (in progress; Phase 6 done and verified)
+- **Current task:** Phase 7 built (7.1-7.11); the final full `opskit/bin/check` was still running when this was pushed: read its result, then update the Phase 7 rows marked PENDING
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -40,7 +40,7 @@
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
-| 7 | Industry starter packs bn + en | Planned and approved (all 8 defaults accepted); start at 7.1 once the Phase 6 full check has finished | — |
+| 7 | Industry starter packs bn + en | Built and live-verified on the demo; full `opskit/bin/check` PENDING at push time; Bangla NOT yet proofread by the owner | live demo + 21 bats tests + 6 selftest rows (see report) |
 | 8 | aibot | Not started | — |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |
@@ -72,6 +72,23 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 7 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Applying `fcommerce` to a demo account creates the listed items | PASS | live demo (Chatwoot v4.18.0): 43 created (saved replies bn+en, 7 labels, 6 keyword rules, hours, greeting, after-hours text, CSAT) |
+| Re-applying changes nothing | PASS | live: "0 to create, 0 to update, 48 unchanged"; bats: no POST/PATCH on the second run |
+| Client-made and client-edited items untouched | PASS | live: client `price` label, edited `greeting_en`, configured inbox shown as KEPT; bats: an item added later survives, a client-edited item is not updated while an untouched one is |
+| Bangla flagged `review_required` until approved | PASS | every Bangla text `review_required: true`; unproofread Bangla SKIPPED unless `--include-unreviewed`; `pack review` / `pack approve` tested |
+| Keyword rule really fires | PASS | live widget visitor: "দাম কত?" -> label `price`; "hello there" -> no label |
+| Dry run first, nothing deleted | PASS | bats: dry run sends no POST/PATCH; request log has no DELETE; code contains no delete call |
+| No prices / facts / digits in packs; automatic texts have no blanks | PASS | `pack validate` rules, proven to fail on deliberate mistakes (bats) |
+| `opskit/bin/check` | PENDING at push time | update when the run finishes |
+Bugs found by the live run (not by unit tests): an empty id field made the shell shift every following field, so every create call was refused (fixed; the idempotency test now covers it).
+Findings: Chatwoot rule conditions are one flat chain, so rules cannot say "customer messages only"; label/saved-reply names must be unique (422 otherwise). See EXPLORATION_REPORT 5c.
+Security review: no token/password printed or stored; the state file holds hashes only; API errors shown are Chatwoot's own validation messages (<= 200 chars); temp files in a 700 folder removed on exit.
+NOT VERIFIED: a real client's existing Chatwoot setup, real Facebook/WhatsApp conversations, how the Bangla reads to a native speaker (owner to proofread: `opskit pack review fcommerce`), the clinic/travel/education/service packs beyond validation and a dry-run of the same code path.
+Differences from the plan: no typed-id step (only local clients exist until Phase 11, A-034); unproofread Bangla is skipped per item (A-030).
+
 ### Phase 6 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|

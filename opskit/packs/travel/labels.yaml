@@ -1,0 +1,17 @@
+industry: travel
+items:
+  - key: quote
+    color: "#1f93ff"
+    description: "Asks for a package price"
+  - key: booking
+    color: "#7ed321"
+    description: "Ready to book"
+  - key: visa
+    color: "#f5a623"
+    description: "Visa or passport question"
+  - key: payment
+    color: "#9013fe"
+    description: "Payment question or proof of payment"
+  - key: complaint
+    color: "#d0021b"
+    description: "Unhappy customer or a problem"

@@ -45,12 +45,13 @@ def _reviewed(item_or_block: dict, include: bool) -> bool:
 
 
 def _action(kind, key, status, reason="", payload=None, sig=None, obj_id=None, inbox=None):
-    return {"kind": kind, "key": key, "status": status, "reason": reason, "payload": payload or {},
-            "sig": sig, "id": obj_id, "inbox": inbox}
+    """`skey` is the key in the state file; it includes the kind because a label and a rule can share a key."""
+    return {"kind": kind, "key": key, "skey": f"{kind.split()[0] if inbox is None else 'inbox'}:{key}", "status": status,
+            "reason": reason, "payload": payload or {}, "sig": sig, "id": obj_id, "inbox": inbox}
 
 
 def _decide_action(kind, key, desired, live, state, payload, obj_id=None, inbox=None):
-    status, reason = decide(desired, live, state.get(key))
+    status, reason = decide(desired, live, state.get(_action(kind, key, SAME, inbox=inbox)["skey"]))
     return _action(kind, key, status, reason, payload, desired, obj_id, inbox)
 
 
@@ -145,7 +146,7 @@ def plan_inbox(pack, langs, include, tz, inbox, state):
 
     def group(slug, label, desired, live, default, payload):
         key = f"{slug}:{iid}"
-        status, reason = decide(desired, None if default else live, state.get(key))
+        status, reason = decide(desired, None if default else live, state.get(f"inbox:{key}"))
         out.append(_action(f"{name} {label}", key, status, reason, payload, desired, inbox=iid))
 
     if greeting:
@@ -209,8 +210,8 @@ def cmd_state(a) -> int:
     path = Path(a.state)
     state = json.loads(path.read_text()) if path.exists() else {}
     for act in json.loads(Path(a.plan).read_text()):
-        if act["status"] in (CREATE, UPDATE, SAME) and act["key"] not in a.failed and act["sig"] is not None:
-            state[act["key"]] = digest(act["sig"])
+        if act["status"] in (CREATE, UPDATE, SAME) and act["skey"] not in a.failed and act["sig"] is not None:
+            state[act["skey"]] = digest(act["sig"])
     path.write_text(json.dumps(state, sort_keys=True, indent=1) + "\n")
     return 0
 

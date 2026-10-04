@@ -44,6 +44,8 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/smoke.sh"
 # shellcheck source=../lib/upgrade.sh
 . "$OPSKIT_ROOT/lib/upgrade.sh"
+# shellcheck source=../lib/pack.sh
+. "$OPSKIT_ROOT/lib/pack.sh"
 # shellcheck source=../lib/channel_hints.sh
 . "$OPSKIT_ROOT/lib/channel_hints.sh"
 # shellcheck source=../lib/channels.sh
@@ -77,7 +79,11 @@ Commands:
   channels plan <id> [--lang en|bn|both] [--for client|owner|all]   the client's (and our) to-do list per channel
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
-  pack validate <file>        validate a pack item file against the schema
+  pack validate [<industry>|<file>]   check one pack, all packs, or one pack file
+  pack list                   the available industry packs
+  pack apply <id> <industry> [--dry-run] [--inbox N] [--include-unreviewed]   saved replies, labels, rules, hours: shows the plan first
+  pack review <industry>      all Bangla texts on one page for proofreading
+  pack approve <industry> --key KEY | --all   mark proofread Bangla as approved
   llm models|effort <client>  BYOK model picker / effort (available in Phase 8)
   selftest                    end-to-end local self test (available from Phase 2)
   help                        show this help
@@ -248,6 +254,7 @@ cmd_selftest() {
     teardown_staging "$sid" >/dev/null 2>&1 || true
     _selftest_monitoring "$id" "$tmp" || rc=1
     _selftest_channels "$id" "$tmp" || rc=1
+    _selftest_packs "$id" || rc=1
   fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
   return "$rc"
@@ -363,6 +370,55 @@ _selftest_channels() {
   return "$rc"
 }
 
+# _selftest_visitor_labels ID WEBSITE_TOKEN TEXT [WAIT_FOR_LABEL] -> labels (comma separated) of a new visitor conversation that says TEXT
+_selftest_visitor_labels() {
+  local id="$1" tk="$2" text="$3" want="${4:-}" at hdr conv labels="" _
+  at="$(_hc_curl "$id" "/api/v1/widget/config?website_token=${tk}" -X POST -H 'Content-Type: application/json' -d '{"locale":"en"}' | jq -r '.website_channel_config.auth_token // empty')"
+  hdr="$(mktemp)"
+  chmod 600 "$hdr"
+  printf 'X-Auth-Token: %s\n' "$at" >"$hdr"
+  conv="$(_hc_curl "$id" "/api/v1/widget/messages?website_token=${tk}&locale=en" -X POST -H "@$hdr" -H 'Content-Type: application/json' \
+    -d "$(jq -cn --arg c "$text" '{message: {content: $c, timestamp: "2026-01-01T00:00:00.000Z"}}')" | jq -r '.conversation_id // empty')"
+  rm -f "$hdr"
+  [ -n "$conv" ] || return 1
+  for _ in $(seq 1 15); do
+    labels="$(cw_request GET "/api/v1/accounts/1/conversations/${conv}/labels" | jq -r '.payload | join(",")')"
+    if [ -n "$want" ]; then [ "$labels" = "$want" ] && break; else sleep 4; break; fi
+    sleep 1
+  done
+  printf '%s' "$labels"
+}
+
+# _selftest_packs ID -> apply the f-commerce pack to the running demo: dry run, apply, re-apply, client edits kept, a keyword rule fires
+_selftest_packs() {
+  local id="$1" out base before after tk i
+  cw_use_stack "$id" || { _selftest_row "packs: setup" FAIL "no API token"; return 1; }
+  base="/api/v1/accounts/1"
+  if [ "$(pack_validate 2>&1 | grep -c '^valid:')" = 6 ]; then _selftest_row "packs: all six packs valid" PASS "generic, fcommerce, clinic, travel, education, service"; else _selftest_row "packs: all six packs valid" FAIL "see: opskit pack validate"; return 1; fi
+  before="$(cw_request GET "$base/canned_responses" | jq length)"
+  out="$(pack_apply "$id" fcommerce --dry-run 2>&1)"
+  after="$(cw_request GET "$base/canned_responses" | jq length)"
+  if [ "$before" = "$after" ] && [[ "$out" == *"Dry run: nothing was changed"* ]]; then _selftest_row "packs: dry run changes nothing" PASS "plan shown, ${after} saved replies before and after"; else _selftest_row "packs: dry run changes nothing" FAIL "counts ${before} -> ${after}"; return 1; fi
+  out="$(pack_apply "$id" fcommerce --include-unreviewed 2>&1)"
+  if [ "$(cw_request GET "$base/canned_responses" | jq length)" -ge 32 ] && [ "$(cw_request GET "$base/labels" | jq '.payload | length')" -ge 7 ] && [[ "$out" == *"applied to"* ]]; then
+    _selftest_row "packs: apply fcommerce" PASS "32 saved replies (bn + en), 7 labels, 6 keyword rules, hours, greeting, rating"
+  else _selftest_row "packs: apply fcommerce" FAIL "see: opskit pack apply ${id} fcommerce --dry-run"; return 1; fi
+  out="$(pack_apply "$id" fcommerce --include-unreviewed 2>&1)"
+  if [[ "$out" == *"0 to create, 0 to update"* ]] && [[ "$out" == *"Nothing to change."* ]]; then _selftest_row "packs: second apply changes nothing" PASS "0 to create, 0 to update"; else _selftest_row "packs: second apply changes nothing" FAIL "second run still changed something"; return 1; fi
+  i="$(cw_request GET "$base/canned_responses" | jq '.[] | select(.short_code == "thanks_en") | .id')"
+  cw_request PATCH "$base/canned_responses/${i}" -H 'Content-Type: application/json' -d '{"canned_response":{"content":"client wording"}}' >/dev/null
+  cw_request POST "$base/canned_responses" -H 'Content-Type: application/json' -d '{"canned_response":{"short_code":"my_own","content":"mine"}}' >/dev/null
+  out="$(pack_apply "$id" fcommerce --include-unreviewed 2>&1)"
+  if [ "$(cw_request GET "$base/canned_responses" | jq -r '.[] | select(.short_code == "thanks_en") | .content')" = "client wording" ] \
+    && [ "$(cw_request GET "$base/canned_responses" | jq -r '.[] | select(.short_code == "my_own") | .content')" = "mine" ] && [[ "$out" == *"client edited"* ]]; then
+    _selftest_row "packs: client edits and own items untouched" PASS "edited reply kept, own reply still there"
+  else _selftest_row "packs: client edits and own items untouched" FAIL "client change was overwritten or lost"; return 1; fi
+  tk="$(cw_request GET "$base/inboxes" | jq -r '.payload[] | select(.name == "ST widget") | .website_token')"
+  if [ "$(_selftest_visitor_labels "$id" "$tk" 'দাম কত?' price)" = "price" ] && [ -z "$(_selftest_visitor_labels "$id" "$tk" 'hello there')" ]; then
+    _selftest_row "packs: keyword rule fires" PASS "visitor 'দাম কত?' gets the price label, 'hello there' gets none"
+  else _selftest_row "packs: keyword rule fires" FAIL "label missing or wrongly added"; return 1; fi
+}
+
 # _selftest_monitoring ID TMPDIR -> acceptance scenarios of SPEC Phase 4 against a pretend Telegram
 _selftest_monitoring() {
   local id="$1" tmp="$2" fakepid real rc=0 st log portf port
@@ -451,7 +507,7 @@ main() {
   case "$cmd" in
     help | -h | --help) usage ;;
     doctor) cmd_doctor ;;
-    client | bot | pack)
+    client | bot)
       local sub="${1:-}"
       shift || true
       case "$sub" in
@@ -465,6 +521,29 @@ main() {
           else
             cmd_client_lifecycle "$sub" "$@"
           fi
+          ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    pack)
+      local psub="${1:-}" pid="${2:-}"
+      shift || true
+      case "$psub" in
+        validate)
+          # a file (any pack file) or an industry name; no argument = every pack
+          if [ -f "${1:-}" ]; then cmd_validate pack "$@"; else pack_validate "$@"; fi
+          ;;
+        list) pack_list ;;
+        review) pack_review "$@" ;;
+        approve) pack_approve "$@" ;;
+        apply)
+          valid_client_id "$pid" || { log_error "usage: opskit pack apply <client> <industry> [--dry-run] [--inbox N] [--include-unreviewed]"; exit 2; }
+          [ -d "$(client_dir "$pid")" ] || die "client not found: $pid"
+          shift 1
+          pack_apply "$pid" "${1:-}" "${@:2}"
           ;;
         *)
           usage >&2

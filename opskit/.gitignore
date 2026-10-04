@@ -11,3 +11,5 @@ backups/
 keys/*.key
 keys/*.txt
 *.key
+__pycache__/
+*.pyc

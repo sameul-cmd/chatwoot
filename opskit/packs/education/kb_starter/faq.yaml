@@ -1,0 +1,74 @@
+industry: education
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: courses
+    question:
+      en: "Which courses do you offer?"
+      bn: "আপনাদের কী কী কোর্স আছে?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: admission
+    question:
+      en: "How do I get admitted?"
+      bn: "কীভাবে ভর্তি হব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: fees
+    question:
+      en: "What are the course fees?"
+      bn: "কোর্স ফি কত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: schedule
+    question:
+      en: "What are the class timings?"
+      bn: "ক্লাসের সময়সূচি কী?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: demo
+    question:
+      en: "Can I attend a demo class?"
+      bn: "আমি কি ডেমো ক্লাসে বসতে পারি?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: certificate
+    question:
+      en: "Do I get a certificate?"
+      bn: "আমি কি সার্টিফিকেট পাব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

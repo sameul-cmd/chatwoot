@@ -1,0 +1,213 @@
+{
+  "canned": [
+    {
+      "id": 1,
+      "account_id": 1,
+      "short_code": "greeting_en",
+      "content": "changed",
+      "created_at": "2026-10-04T16:13:33.731Z",
+      "updated_at": "2026-10-04T16:13:52.622Z"
+    }
+  ],
+  "labels": [
+    {
+      "id": 1,
+      "title": "price",
+      "description": "changed",
+      "color": "#f5a623",
+      "show_on_sidebar": true
+    }
+  ],
+  "rules": [
+    {
+      "id": 1,
+      "account_id": 1,
+      "name": "[opskit:t] Price words",
+      "description": "d",
+      "event_name": "message_created",
+      "conditions": [
+        {
+          "values": [
+            "price"
+          ],
+          "attribute_key": "content",
+          "query_operator": "OR",
+          "filter_operator": "contains"
+        },
+        {
+          "values": [
+            "দাম"
+          ],
+          "attribute_key": "content",
+          "query_operator": null,
+          "filter_operator": "contains"
+        }
+      ],
+      "actions": [
+        {
+          "action_name": "add_label",
+          "action_params": [
+            "price"
+          ]
+        }
+      ],
+      "created_on": 1791130413,
+      "active": true,
+      "execution_delay": null
+    }
+  ],
+  "inboxes": [
+    {
+      "id": 2,
+      "name": "P7 fresh",
+      "channel_type": "Channel::WebWidget",
+      "working_hours_enabled": false,
+      "timezone": "UTC",
+      "greeting_enabled": false,
+      "greeting_message": null,
+      "out_of_office_message": null,
+      "csat_survey_enabled": false,
+      "working_hours": [
+        {
+          "day_of_week": 0,
+          "closed_all_day": true,
+          "open_hour": null,
+          "open_minutes": null,
+          "close_hour": null,
+          "close_minutes": null,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 1,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 2,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 3,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 4,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 5,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 6,
+          "closed_all_day": true,
+          "open_hour": null,
+          "open_minutes": null,
+          "close_hour": null,
+          "close_minutes": null,
+          "open_all_day": false
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "name": "P7 widget",
+      "channel_type": "Channel::WebWidget",
+      "working_hours_enabled": true,
+      "timezone": "Asia/Dhaka",
+      "greeting_enabled": true,
+      "greeting_message": "Hello! বাংলা ok",
+      "out_of_office_message": "We are closed",
+      "csat_survey_enabled": true,
+      "working_hours": [
+        {
+          "day_of_week": 0,
+          "closed_all_day": false,
+          "open_hour": 10,
+          "open_minutes": 0,
+          "close_hour": 20,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 1,
+          "closed_all_day": true,
+          "open_hour": 0,
+          "open_minutes": 0,
+          "close_hour": 0,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 2,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 3,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 4,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 5,
+          "closed_all_day": false,
+          "open_hour": 9,
+          "open_minutes": 0,
+          "close_hour": 17,
+          "close_minutes": 0,
+          "open_all_day": false
+        },
+        {
+          "day_of_week": 6,
+          "closed_all_day": true,
+          "open_hour": null,
+          "open_minutes": null,
+          "close_hour": null,
+          "close_minutes": null,
+          "open_all_day": false
+        }
+      ]
+    }
+  ]
+}

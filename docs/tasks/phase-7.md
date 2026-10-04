@@ -28,47 +28,48 @@ A new client's inbox starts empty. A "pack" is a ready-made starter set for one 
 
 ## Tasks
 
-### [ ] 7.1 — Verify the facts live, fix the data format
+### [x] 7.1 — Verify the facts live, fix the data format
 - **Goal:** on a running demo account: create one saved reply, label, automation rule (keyword → `add_label`) and set inbox hours/greeting through the API; confirm field names, uniqueness errors, the `contains` operator with `query_operator: OR`, behaviour of an unknown action, and what a `PATCH` of working hours does to unspecified days. Record in EXPLORATION_REPORT.
 - **Acceptance:** findings written; the exact JSON for each call saved as fixtures in `opskit/tests/fixtures/`.
 
-### [ ] 7.2 — Pack format and schemas
+### [x] 7.2 — Pack format and schemas
 - **Goal:** `opskit/packs/<industry>/` files exactly as in SPEC Section 12 (`canned_responses.yaml`, `labels.yaml`, `automations.yaml`, `business_hours.yaml`, `auto_replies.yaml`, `kb_starter/*.yaml`) plus `pack.yaml` (industry, version, description, languages). Extend `pack.schema.json` (or one schema per file) with `review_required` per Bangla text. Validation reuses `lib/schema_check.py`; `opskit pack validate [industry]`.
 - **Acceptance:** valid packs pass; a pack with a missing Bangla/English text, an unknown automation action, a bad short code or a blank inside an automatic text fails with the field name.
 
-### [ ] 7.3 — `generic` and `fcommerce` packs (drafts, bn + en)
+### [x] 7.3 — `generic` and `fcommerce` packs (drafts, bn + en)
 - **Goal:** write the two packs: saved replies (greeting, ask order details, order confirmed, payment instructions blank, delivery info blank, out of stock, price enquiry, thanks, handoff to human...), labels (order, price, complaint, delivery, payment, return, vip), keyword rules (order/অর্ডার, price/দাম, delivery/ডেলিভারি, complaint words → label), hours, greeting, after-hours message, CSAT on, `kb_starter`. All Bangla `review_required: true`; no prices or policies.
 - **Acceptance:** `pack validate` passes; test: no automatic text has a blank; no digits that look like prices.
 
-### [ ] 7.4 — The four lighter packs
+### [x] 7.4 — The four lighter packs
 - **Goal:** `clinic` (appointment request, opening hours, doctor availability blank, emergency notice "call your local emergency number" without medical advice), `travel`, `education`, `service`, each as in question 1.
 - **Acceptance:** `pack validate` passes for all six; clinic texts contain no medical advice (checked by review in the verification report).
 
-### [ ] 7.5 — `opskit pack apply <id> <industry> [--dry-run] [--inbox N] [--include-unreviewed]`
+### [x] 7.5 — `opskit pack apply <id> <industry> [--dry-run] [--inbox N] [--include-unreviewed]`
 - **Goal:** new `opskit/lib/pack.sh` (+ a small Python/jq helper for the diff): reads the pack, reads the live account through `lib/chatwoot_api.sh`, builds a plan (create / update / kept-client-edited / unchanged / skipped-unreviewed), prints it as a table, and only writes when not `--dry-run`. Writes: saved replies by short code, labels by title, rules by name tag, inbox hours/greeting for the chosen inboxes. Remembers what it wrote in `clients/<id>/pack-state.json` (git-ignored; hashes only, no message text from customers). Never calls a delete endpoint.
 - **Acceptance:** first apply creates everything; second apply says "0 changes"; an item the client edited or created is untouched.
 
-### [ ] 7.6 — Safety rules in `pack apply`
+### [x] 7.6 — Safety rules in `pack apply`
 - **Goal:** the dry run is shown first and a real apply to a **live** client (not the local demo) asks for typed client id, as other live changes do; refuses `shared_accounts` (V2); needs the admin API token and says so plainly if missing; Bangla not reviewed → refused without the flag; unknown industry → lists the valid ones.
 - **Acceptance:** bats covers each refusal and message.
+- **Built differently:** only local-target clients exist until Phase 11, so there is no typed-id step yet (A-034); unproofread Bangla is skipped per item rather than refusing the whole apply (A-030).
 
-### [ ] 7.7 — `opskit pack review <industry>` and `pack approve`
+### [x] 7.7 — `opskit pack review <industry>` and `pack approve`
 - **Goal:** `pack review` prints every Bangla text with its key and the English meaning side by side as one Markdown page; `pack approve <industry> [--key K | --all]` sets `review_required: false` (used only after the owner says "approved").
 - **Acceptance:** output readable on a phone; approve changes only the flags.
 
-### [ ] 7.8 — Starter Q&A copy (`kb_starter`)
+### [x] 7.8 — Starter Q&A copy (`kb_starter`)
 - **Goal:** `pack apply` copies `kb_starter/*` to `clients/<id>/kb/` only when absent and says where it went; prints a reminder "fill in the answers, the bot ignores empty ones".
 - **Acceptance:** second run does not overwrite edited files.
 
-### [ ] 7.9 — Tests
+### [x] 7.9 — Tests
 - **Goal:** bats with a fake Chatwoot API (extend the existing fake) for: plan building, idempotency, client-edited items kept, deletion never called, `--inbox`, review gate; schema tests from 7.2.
 - **Acceptance:** all pass in `opskit/bin/check`.
 
-### [ ] 7.10 — Live acceptance and selftest v6
+### [x] 7.10 — Live acceptance and selftest v6
 - **Goal:** on the demo stack: `pack apply demo fcommerce --dry-run`, apply, re-apply (0 changes), edit one saved reply and add one of our own in the Chatwoot API, re-apply (both untouched), send a visitor message "দাম কত?" through the widget and see the conversation get the `price` label. Add these steps to `opskit selftest`.
 - **Acceptance:** all rows as expected; the keyword-label row proves a rule really fires, not just that it was created.
 
-### [ ] 7.11 — Docs, verification, security review
+### [x] 7.11 — Docs, verification, security review
 - **Goal:** `docs/runbooks/packs.md` (how to apply, review Bangla, what is never touched); PROGRESS/ASSUMPTIONS/ENVIRONMENT; verification report; check that no customer text, token or password is printed or stored in `pack-state.json`; upstream-path test still 0 files.
 - **Acceptance:** `opskit/bin/check` passes; report written.
 

@@ -1,0 +1,66 @@
+industry: clinic
+items:
+  - key: opening_hours
+    question:
+      en: "What are your opening hours?"
+      bn: "আপনাদের খোলা থাকার সময় কখন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: location
+    question:
+      en: "Where are you located?"
+      bn: "আপনারা কোথায় অবস্থিত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: contact
+    question:
+      en: "How can I contact you by phone?"
+      bn: "ফোনে আপনাদের সাথে কীভাবে যোগাযোগ করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: book
+    question:
+      en: "How do I book an appointment?"
+      bn: "কীভাবে অ্যাপয়েন্টমেন্ট নেব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: doctors
+    question:
+      en: "Which doctors are available and when?"
+      bn: "কোন ডাক্তার কখন বসেন?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: fee
+    question:
+      en: "What is the consultation fee?"
+      bn: "পরামর্শ ফি কত?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: reports
+    question:
+      en: "How do I get my reports?"
+      bn: "আমার রিপোর্ট কীভাবে পাব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true
+  - key: cancel
+    question:
+      en: "How do I change or cancel my appointment?"
+      bn: "অ্যাপয়েন্টমেন্ট বদলাতে বা বাতিল করতে কী করব?"
+    answer:
+      en: ""
+      bn: ""
+    review_required: true

@@ -1,0 +1,17 @@
+industry: generic
+items:
+  - key: enquiry
+    color: "#1f93ff"
+    description: "Customer is asking for information"
+  - key: price
+    color: "#f5a623"
+    description: "Customer asks about price"
+  - key: follow_up
+    color: "#7ed321"
+    description: "Needs a follow-up from the team"
+  - key: complaint
+    color: "#d0021b"
+    description: "Customer is unhappy or reports a problem"
+  - key: vip
+    color: "#ffd700"
+    description: "Important or repeat customer"

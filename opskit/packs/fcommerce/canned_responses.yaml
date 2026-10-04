@@ -1,0 +1,66 @@
+industry: fcommerce
+items:
+  - key: greeting
+    en: "Hello {{contact.name}}, thank you for messaging us. How can we help you today?"
+    bn: "হ্যালো {{contact.name}}, আমাদের মেসেজ করার জন্য ধন্যবাদ। আজ আমরা আপনাকে কীভাবে সাহায্য করতে পারি?"
+    review_required: true
+  - key: please_wait
+    en: "Thank you for your patience. We are checking this and will get back to you shortly."
+    bn: "ধৈর্য ধরার জন্য ধন্যবাদ। আমরা বিষয়টি দেখছি এবং শীঘ্রই আপনাকে জানাব।"
+    review_required: true
+  - key: handoff_human
+    en: "I am passing your conversation to a team member who will reply soon."
+    bn: "আমি আপনার কথোপকথনটি আমাদের একজন সদস্যের কাছে পাঠিয়ে দিচ্ছি, তিনি শীঘ্রই উত্তর দেবেন।"
+    review_required: true
+  - key: thanks
+    en: "Thank you for contacting us. Have a great day!"
+    bn: "আমাদের সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিনটি শুভ হোক!"
+    review_required: true
+  - key: ask_product
+    en: "Which product are you interested in? Please share a photo or the product name."
+    bn: "আপনি কোন পণ্যটি নিয়ে আগ্রহী? অনুগ্রহ করে ছবি বা পণ্যের নাম পাঠান।"
+    review_required: true
+  - key: ask_order_details
+    en: "To place your order, please send your full name, phone number, delivery address and the product details (size or colour)."
+    bn: "অর্ডার করতে অনুগ্রহ করে আপনার পূর্ণ নাম, ফোন নম্বর, ডেলিভারির ঠিকানা এবং পণ্যের বিবরণ (সাইজ বা রং) পাঠান।"
+    review_required: true
+  - key: order_received
+    en: "Thank you! We have received your order details and will confirm shortly."
+    bn: "ধন্যবাদ! আপনার অর্ডারের তথ্য আমরা পেয়েছি এবং শীঘ্রই নিশ্চিত করব।"
+    review_required: true
+  - key: price_reply
+    en: "The price of this product is [price]."
+    bn: "এই পণ্যটির দাম [দাম]।"
+    review_required: true
+  - key: payment_how
+    en: "You can pay by [payment methods]. Please send us the payment details after you pay."
+    bn: "আপনি [পেমেন্ট পদ্ধতি] দিয়ে পেমেন্ট করতে পারবেন। পেমেন্ট করার পর বিস্তারিত আমাদের পাঠিয়ে দিন।"
+    review_required: true
+  - key: delivery_info
+    en: "Delivery usually takes [delivery time] and the delivery charge is [delivery charge]."
+    bn: "ডেলিভারিতে সাধারণত [ডেলিভারির সময়] লাগে এবং ডেলিভারি চার্জ [ডেলিভারি চার্জ]।"
+    review_required: true
+  - key: out_of_stock
+    en: "Sorry, this item is out of stock right now. May we suggest a similar product?"
+    bn: "দুঃখিত, এই পণ্যটি এখন স্টকে নেই। আমরা কি একই ধরনের অন্য একটি পণ্য দেখাতে পারি?"
+    review_required: true
+  - key: order_confirmed
+    en: "Your order is confirmed. Thank you for shopping with us!"
+    bn: "আপনার অর্ডার নিশ্চিত হয়েছে। আমাদের কাছ থেকে কেনাকাটার জন্য ধন্যবাদ!"
+    review_required: true
+  - key: order_shipped
+    en: "Your order has been handed to the courier. We will share the tracking details when we have them."
+    bn: "আপনার অর্ডার কুরিয়ারে দেওয়া হয়েছে। ট্র্যাকিংয়ের তথ্য পেলে আমরা জানিয়ে দেব।"
+    review_required: true
+  - key: return_policy
+    en: "Our return and exchange policy: [return policy]."
+    bn: "আমাদের রিটার্ন ও এক্সচেঞ্জ নীতি: [রিটার্ন নীতি]।"
+    review_required: true
+  - key: review_ask
+    en: "We hope you like your order! Could you share a photo or a short review?"
+    bn: "আশা করি আপনার অর্ডারটি আপনার পছন্দ হয়েছে! একটি ছবি বা ছোট রিভিউ দিলে আমরা খুশি হব।"
+    review_required: true
+  - key: complaint_sorry
+    en: "We are very sorry about this. Please share your order details and a photo, and we will look into it."
+    bn: "এই অসুবিধার জন্য আমরা সত্যিই দুঃখিত। অনুগ্রহ করে অর্ডারের তথ্য ও একটি ছবি পাঠান, আমরা বিষয়টি দেখব।"
+    review_required: true

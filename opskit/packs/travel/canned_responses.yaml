@@ -1,0 +1,34 @@
+industry: travel
+items:
+  - key: greeting
+    en: "Hello {{contact.name}}, thank you for messaging us. How can we help you today?"
+    bn: "হ্যালো {{contact.name}}, আমাদের মেসেজ করার জন্য ধন্যবাদ। আজ আমরা আপনাকে কীভাবে সাহায্য করতে পারি?"
+    review_required: true
+  - key: handoff_human
+    en: "I am passing your conversation to a team member who will reply soon."
+    bn: "আমি আপনার কথোপকথনটি আমাদের একজন সদস্যের কাছে পাঠিয়ে দিচ্ছি, তিনি শীঘ্রই উত্তর দেবেন।"
+    review_required: true
+  - key: thanks
+    en: "Thank you for contacting us. Have a great day!"
+    bn: "আমাদের সাথে যোগাযোগ করার জন্য ধন্যবাদ। আপনার দিনটি শুভ হোক!"
+    review_required: true
+  - key: trip_ask
+    en: "Where would you like to travel, on which dates, and how many people are going?"
+    bn: "আপনি কোথায় যেতে চান, কোন তারিখে এবং কতজন যাবেন?"
+    review_required: true
+  - key: quote
+    en: "The package to [destination] costs [price] per person and includes [inclusions]."
+    bn: "[গন্তব্য] প্যাকেজের খরচ জনপ্রতি [দাম] এবং এতে আছে [কী কী অন্তর্ভুক্ত]।"
+    review_required: true
+  - key: documents_ask
+    en: "Please send a clear copy of the passport photo page and your contact number."
+    bn: "অনুগ্রহ করে পাসপোর্টের ছবির পাতার একটি স্পষ্ট কপি এবং আপনার যোগাযোগ নম্বর পাঠান।"
+    review_required: true
+  - key: visa_note
+    en: "Visa approval is decided by the embassy; we only help with the application process."
+    bn: "ভিসা অনুমোদন দূতাবাস সিদ্ধান্ত নেয়; আমরা শুধু আবেদন প্রক্রিয়ায় সাহায্য করি।"
+    review_required: true
+  - key: cancel_policy
+    en: "Our cancellation policy: [cancellation policy]."
+    bn: "আমাদের বাতিলের নীতি: [বাতিলের নীতি]।"
+    review_required: true

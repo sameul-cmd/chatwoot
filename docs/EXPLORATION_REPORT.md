@@ -57,6 +57,15 @@ Not applicable yet (no UI review done); bot answer quality is Phase 8.
 - Telegram and WhatsApp-cloud inbox creation call the real services, so the sandbox cannot create them (api.telegram.org, graph.facebook.com unreachable). The demo uses simulated inboxes written to the database.
 - Instagram/Facebook app id/secret and verify token are installation configs readable by name.
 
+## 5c. Pack findings (Phase 7, task 7.1, verified live on a demo stack, v4.18.0)
+- **Saved replies** `GET|POST /api/v1/accounts/1/canned_responses` (body `{"canned_response":{"short_code","content"}}`): list is a plain JSON array; a duplicate `short_code` returns 422 "Short code has already been taken".
+- **Labels** `/labels` (body `{title, description, color, show_on_sidebar}`): list is `{"payload":[...]}`; a duplicate title returns 422 "Title has already been taken".
+- **Automation rules** `/automation_rules`: list and PATCH answer are wrapped in `{"payload": ...}`, create answers the bare object. A rule with several `content contains <word>` conditions joined by `query_operator: "OR"` (last one `null`) works. Names are not unique.
+- **Conditions are one flat chain without brackets**, so the pack uses only content keywords joined by OR (no "incoming only" condition); a team member's own message with the word also tags the chat.
+- **Keyword rule really fires**: visitor message "দাম কত?" -> conversation labelled `price`; "How much is the PRICE" -> `price` (case does not matter); "hello there" -> no label.
+- **Inbox settings** `PATCH /inboxes/:id` take `greeting_enabled`, `greeting_message`, `out_of_office_message`, `csat_survey_enabled`, `working_hours_enabled`, `timezone`, `working_hours[]`. Working hours listed for a new inbox: 7 rows, hours enabled = false (Sunday closed, Monday-Friday 9-17, Saturday closed). A PATCH with fewer than seven days changes only the days sent. A closed day can come back with hours 0/0 or null, so only `closed_all_day` counts. An unknown timezone returns 422 "Timezone is not included in the list"; `Asia/Dhaka` is accepted.
+- Real shapes are saved in `opskit/tests/fixtures/pack_live_shapes.json` (fictional data).
+
 ## 6. Matches the SPEC? (agent's view)
 Mostly yes. Answers to *(verify)* items so far:
 - CE image tag format: `chatwoot/chatwoot:v4.18.0-ce` exists.
