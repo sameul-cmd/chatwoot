@@ -34,6 +34,11 @@ def _message(error) -> str:
     # Spec: shared_accounts is reserved for V2 and must be rejected with a clear "V2" message.
     if error.validator == "enum" and _path(error).endswith("install.mode") and error.instance == "shared_accounts":
         return "install.mode 'shared_accounts' is V2 and not supported yet (use 'dedicated')"
+    parts = [str(x) for x in error.absolute_path]
+    if error.validator == "const" and len(parts) == 3 and parts[0] == "addons" and parts[2] == "enabled":
+        return f"add-on '{parts[1]}' is V2 and not available yet (see docs/ADDONS.md)"
+    if error.validator == "enum" and parts == ["brand", "mode"]:
+        return "brand.mode 'custom' is not available yet: white-label is an owner decision pending (see docs/ADDONS.md)"
     return error.message
 
 

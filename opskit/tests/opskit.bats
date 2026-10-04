@@ -132,3 +132,21 @@ setup() {
   if [ "$status" -eq 3 ]; then skip "pinned tag not available (shallow clone)"; fi
   [ "$status" -eq 0 ]
 }
+
+@test "reserved addons block accepted while disabled" {
+  run "$OPSKIT" client validate "$FIX/client_addons_reserved.yaml"
+  [ "$status" -eq 0 ]
+}
+
+@test "enabling a V2 add-on is rejected with a V2 message" {
+  run "$OPSKIT" client validate "$FIX/client_addon_on.yaml"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"addons.order_capture.enabled"* ]]
+  [[ "$output" == *"V2"* ]]
+}
+
+@test "custom brand mode is not available yet" {
+  run "$OPSKIT" client validate "$FIX/client_brand_custom.yaml"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"brand.mode"* ]]
+}

@@ -64,6 +64,7 @@
 | 9 | Own CE images incl. arm64 | 10 |
 
 ### V2 (design for, don't build)
+**Owner-selected add-ons (4 Oct 2026), to be built only after the first client is live (details and difficulty: `docs/ADDONS.md`; wiring: `docs/TECH_ARCHITECTURE.md` section 7; ADR-014):** order capture in chat (sheet + Telegram alert), order-status lookup, auto-labels + angry-customer flag, after-hours replies + review/CSAT requests, daily owner digest on Telegram, agent assist (reply drafts, summaries, translation), self-service FAQ editor, appointment booking. White-label (`brand`) stays an owner decision, default off.
 Shared multi-account install for small clients (`install.mode: shared_accounts`; Section 6 keeps fields ready), client self-service portal, bot analytics dashboard, voice channels, custom Chatwoot UI changes, white-label mobile app.
 
 ### Never (license/policy)

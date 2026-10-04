@@ -1,0 +1,21 @@
+client_id: demo
+name: Demo Store
+timezone: Asia/Dhaka
+languages: [bn, en]
+domain: chat.demo-store.example.com
+install:
+  mode: dedicated
+  tag: v4.18.0-ce
+addons:
+  order_capture:
+    enabled: true
+accounts:
+  - name: Demo Store
+bot:
+  enabled: true
+  inboxes: [1]
+  llm:
+    base_url: https://api.openai.com/v1
+    api_key_env: AIBOT_LLM_API_KEY
+    model: gpt-5
+    effort: max

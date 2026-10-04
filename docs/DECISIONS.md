@@ -36,5 +36,8 @@
 ### ADR-013: GitHub Actions stays disabled in the fork
 - **Status:** accepted (owner, 2026-10-04) — **Decision:** no CI on GitHub for now; `opskit/bin/check` is the gate, run locally. **Consequences:** `opskit-ci.yml` is dormant; Phase 10 (multi-arch image build) needs Actions, so revisit then (disable Chatwoot's workflows per-file, or an approved ledger patch removing them).
 
+### ADR-014: V2 add-ons are reserved, not built
+- **Status:** accepted (owner, 2026-10-04) — **Decision:** the 8 selected add-ons are V2 (after first client live); V1 only keeps wiring (reserved `addons`/`brand` config, extension points in TECH_ARCHITECTURE section 7). **Consequences:** `enabled: true` is rejected until built; each V2 add-on gets its own phase/ADR when started.
+
 ### ADR-010: Two IDE packages share docs
 - **Status:** accepted — Kilo: `AGENTS.fork.md` + `kilo.jsonc` + `.kilo/`. Factory: `.factory/AGENTS.md` + `.factory/skills/`. Claude Code (this fork): `.claude/CLAUDE.md` + `.claude/skills/`.

@@ -34,6 +34,9 @@ Self-hosted CE has no per-agent fee, while Chatwoot Cloud is about $19-$99 per a
 | A15 | Shared multi-account install for tiny clients (V2 in SPEC) | lower cost per client | H | decision + load testing |
 | A16 | Bot analytics dashboard (V2 in SPEC) | proves ROI | M | none |
 
+## 4a. Owner selection (2026-10-04): V2, after first client is live
+Order capture, order-status lookup, auto-labels + angry flag, after-hours + review/CSAT, daily Telegram digest, agent assist, self-service FAQ editor, appointment booking. Wiring kept in V1: see TECH_ARCHITECTURE section 7 and ADR-014. White-label (A1) stays pending.
+
 ## 4. Suggested order (owner to confirm)
 1. A1 white-label switch (default off)  2. A2 + A3 order capture/status (f-commerce first market)  3. A6 + A8 (cheap, instant value)  4. A7 owner digest  5. A5 agent assist  6. A4 voice notes  7. A10 KB editor  8. A11 booking. Everything uses the BYOK adapter and fake-LLM tests; none need Chatwoot code changes.
 

@@ -51,3 +51,19 @@ Deploy, backup, restore, upgrade: same pattern as the Activepieces kit (render â
 
 ## 6. Sizing defaults (Phase 0 overrides)
 rails 1.5 GB, sidekiq 1 GB (concurrency 5), postgres 1 GB, redis 256 MB, aibot 256 MB; 4 GB host + 2 GB swap minimum.
+
+## 7. Extension points kept open for V2 add-ons (ADR-014)
+Nothing below adds features now; each is a design constraint for the phase named, so the V2 add-ons plug in without rework.
+| Needed by (V2 add-on) | Constraint on V1 work | Phase |
+|---|---|---|
+| all | `client.yaml` has reserved `addons.<id>.{enabled,settings}` (enabled must be false, rejected with "V2") and `brand` (default Chatwoot). Done in Phase 1 | 1 |
+| all bot add-ons | aibot webhook handler dispatches an event to an ordered list of handlers (`handlers/` package; V1 = the answer handler only), so a new handler does not edit `app.py` | 8 |
+| order capture/status, booking | `chatwoot.py` exposes: send message, private note (`private: true`), set labels, set conversation custom attributes, toggle status, assign team. All behind one client class | 8 |
+| order capture/status, booking | an outbound "connector" interface (`connectors/`, V1 empty) for Google Sheets/Calendar/shop APIs; credentials only via env names in `addons.<id>.settings` | 8 |
+| auto-labels, agent assist | LLM adapter returns structured JSON for any prompt (not only the answer prompt); prompts live in `aibot/prompts/` | 8 |
+| FAQ editor | KB is plain files in `kb/` with a stable format; aibot can reload the KB without restart (`POST /admin/reload`, internal network only) | 8 |
+| agent assist, digest | audit/metrics store is SQLite with a schema-version table so V2 can add tables | 8 |
+| owner digest, alerts | opskit has one `lib/notify.sh` Telegram sender (used by Phase 4 fallback and reusable by the digest) | 4 |
+| owner digest, reports | care-report data collection is separate from rendering (collector -> JSON -> HTML), so a daily digest reuses the collector | 9 |
+| after-hours, CSAT | packs may include CSAT settings and business-hours auto replies (data only; Chatwoot built-ins) | 7 |
+| booking, FAQ editor | compose template can add optional services (profiles) without changing the base stack | 2 |
