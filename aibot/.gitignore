@@ -1,0 +1,9 @@
+.env
+*.sqlite
+*.db
+kb_private/
+__pycache__/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
