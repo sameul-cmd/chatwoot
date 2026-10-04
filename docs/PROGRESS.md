@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 1 — Opskit foundation (tasks 1.1-1.10 done, verification pending)
-- **Current task:** Phase 2 plan written (`docs/tasks/phase-2.md`); waiting for owner approval of its 5 open questions (secrets involved), then start 2.1 (Phase 1 verified; GitHub Actions deliberately stays OFF, see Setup notes)
+- **Current phase:** Phase 2 - Client deployment kit (done, verified locally)
+- **Current task:** `/start-phase` for Phase 3 (Backups & restore) when the owner says go
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -10,7 +10,7 @@
 |---|---|---|---|
 | 0 | Fork, set up & explore Chatwoot | Done on cloud sandbox; owner-account tests (Telegram, email, WhatsApp, Meta) and Bengali UI check pending on owner device | cloud-verified 2026-10-04 |
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
-| 2 | Client deployment kit | Planned (task file ready, awaiting owner approval) | — |
+| 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
 | 3 | Backups & restore | Not started | — |
 | 4 | Monitoring & alerts via shared ops-hub | Not started | — |
 | 5 | Safe upgrades | Not started | — |
@@ -23,6 +23,7 @@
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
+- 2026-10-04 Phase 2 (2.1-2.11): `aibot/Dockerfile`, `opskit/templates/*`, `opskit/lib/{secrets,render,deploy,checks,ssh}.sh`, `opskit/agent/bootstrap.sh`, `opskit/bin/opskit` (client new/render/deploy/check/pause/resume/offboard, host bootstrap, selftest), bats `render.bats` + `host.bats`, `docs/runbooks/deploy.md`. Verify: `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt opskit/bin/check` (sandbox) or `opskit/bin/check` (normal machine) -> ALL CHECKS PASSED incl. SELFTEST PASSED; manual: runbook `docs/runbooks/deploy.md`.
 - 2026-10-04 Phase 1 (1.1-1.10): `opskit/{bin,lib,schema,tests}`, `aibot/{pyproject.toml,src/aibot,tests}`, `.github/workflows/opskit-ci.yml`, `docs/HANDOVER.md`. Verify: `opskit/bin/check --quick` -> ALL CHECKS PASSED; `opskit/bin/opskit doctor`; `opskit/bin/opskit client validate opskit/tests/fixtures/client_shared.yaml` -> "V2" message. Not verified: the CI workflow itself (needs enabling on GitHub).
 
 ## Setup notes
@@ -41,6 +42,22 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 2 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Rendered stack uses CE tag, memory limits, only Caddy exposed, signup off | PASS | bats `render.bats` 3-5 (tag `chatwoot/chatwoot:v4.18.0-ce`, 7+ `mem_limit`, exactly one `ports:` = Caddy, `ENABLE_ACCOUNT_SIGNUP=false`, no `base` service); live stack: only Caddy bound to host |
+| Secret generation aborts on empty values | PASS | bats: fake `openssl` returning nothing aborts; `require_secret`; generated secrets non-empty, mode 600 |
+| `db:chatwoot_prepare` on first deploy and on re-deploys | PASS (first deploy + every re-run); real version upgrade flow is Phase 5 | deploy log "running db:chatwoot_prepare" on each run |
+| Test email sends | PASS locally (Sidekiq `deliver_later` -> SMTP -> Mailpit); real SMTP NOT VERIFIED | post-deploy check 5/5 |
+| Re-running deploy is idempotent | PASS | live re-run: same secrets, "Super Admin already exists", bats idempotent re-render |
+| `client.yaml` accepts `dedicated`, rejects `shared_accounts` with "V2" | PASS | bats (validate + render) |
+| `selftest` v1: deploy -> health -> widget loads -> teardown | PASS | `SELFTEST PASSED` in ~85 s; 0 containers/volumes/tmp left |
+| Post-deploy checks (login, widget script, /api, websocket via Caddy, sidekiq + email) | PASS 5/5 | `client check demo` |
+Bugs found and fixed during the phase: admin password complexity (A-008), empty SMTP login lines (A-007), silent exit under `pipefail` in `ensure_admin`.
+NOT VERIFIED: `host bootstrap` on a real server (fake-SSH + dry-run only), remote deploy (refused by design until Phase 11, A-005), real HTTPS certificate issuance (local uses Caddy internal CA), real SMTP, Caddy-on-host variant (A-006 deviation), arm64.
+Security review: no secrets in tracked files, in compose, or on command lines (`-e NAME` only); secret/env files mode 600 and git-ignored; aibot container runs non-root; upstream-path check clean (0 non-kit files changed, `enterprise/` untouched).
+Known limits: the aibot image is built on the target (A-009); `restart: always` containers come back when the sandbox Docker restarts.
+
 ### Phase 1 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|

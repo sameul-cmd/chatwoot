@@ -42,8 +42,7 @@ step shellcheck run_shellcheck
 step bats run_bats
 step aibot run_aibot
 if [ "$QUICK" -eq 0 ]; then
-  echo
-  echo "(no docker integration tests yet - added from Phase 2)"
+  step selftest "$ROOT/opskit/bin/opskit" selftest
 fi
 
 echo

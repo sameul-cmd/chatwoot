@@ -10,6 +10,16 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/confirm.sh"
 # shellcheck source=../lib/validate.sh
 . "$OPSKIT_ROOT/lib/validate.sh"
+# shellcheck source=../lib/secrets.sh
+. "$OPSKIT_ROOT/lib/secrets.sh"
+# shellcheck source=../lib/render.sh
+. "$OPSKIT_ROOT/lib/render.sh"
+# shellcheck source=../lib/deploy.sh
+. "$OPSKIT_ROOT/lib/deploy.sh"
+# shellcheck source=../lib/ssh.sh
+. "$OPSKIT_ROOT/lib/ssh.sh"
+# shellcheck source=../lib/checks.sh
+. "$OPSKIT_ROOT/lib/checks.sh"
 
 usage() {
   cat <<'EOF'
@@ -18,6 +28,13 @@ Usage: opskit <command> [args]
 Commands:
   doctor                      check required tools
   client validate <file>      validate a client.yaml against the schema
+  client new <id> --domain <d> [--name <n>] [--local]   create opskit/clients/<id>/client.yaml
+  client render <id>          render compose/.env/Caddyfile into clients/<id>/stack (secrets generated once)
+  client deploy <id>          build, db:chatwoot_prepare, start, wait healthy, create the Super Admin (local target)
+  client check <id>           post-deploy checks (PASS/FAIL table)
+  client pause|resume <id>    stop / start the stack
+  client offboard <id> --yes  DESTRUCTIVE: delete containers + volumes (needs typed client id)
+  host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
   pack validate <file>        validate a pack item file against the schema
   llm models|effort <client>  BYOK model picker / effort (available in Phase 8)
@@ -52,6 +69,100 @@ cmd_doctor() {
   return "$missing"
 }
 
+# valid_client_id ID -> same pattern as the schema; checked before any path is built from the id.
+valid_client_id() { [[ "${1:-}" =~ ^[a-z][a-z0-9-]{1,30}$ ]]; }
+
+cmd_client_new() {
+  local id="${1:-}" domain="" name="" target="remote" http_port="" https_port=""
+  [ -n "$id" ] || { log_error "usage: opskit client new <id> --domain <domain> [--name <name>] [--local [--http-port N --https-port N]]"; return 2; }
+  valid_client_id "$id" || { log_error "invalid client id '$id' (lowercase letters, digits, dashes; 2-31 chars)"; return 2; }
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --domain) domain="${2:-}"; shift 2 ;;
+      --name) name="${2:-}"; shift 2 ;;
+      --local) target="local"; shift ;;
+      --http-port) http_port="${2:-}"; shift 2 ;;
+      --https-port) https_port="${2:-}"; shift 2 ;;
+      *) log_error "unknown option: $1"; return 2 ;;
+    esac
+  done
+  [ -n "$domain" ] || { log_error "--domain is required"; return 2; }
+  [ -n "$name" ] || name="$id"
+  local dir cfg
+  dir="$(client_dir "$id")"
+  cfg="$dir/client.yaml"
+  [ ! -e "$cfg" ] || die "client '$id' already exists ($cfg)"
+  mkdir -p "$dir"
+  # shellcheck disable=SC2016  # envsubst variable list must stay literal
+  CLIENT_ID="$id" CLIENT_NAME="$name" CLIENT_DOMAIN="$domain" CW_TAG="v4.18.0-ce" DEPLOY_TARGET="$target" \
+    envsubst '${CLIENT_ID} ${CLIENT_NAME} ${CLIENT_DOMAIN} ${CW_TAG} ${DEPLOY_TARGET}' <"$OPSKIT_ROOT/templates/client.yaml.tmpl" >"$cfg"
+  [ -z "$http_port" ] || printf '  http_port: %s\n' "$http_port" >>"$cfg"
+  [ -z "$https_port" ] || printf '  https_port: %s\n' "$https_port" >>"$cfg"
+  if python3 "$OPSKIT_ROOT/lib/schema_check.py" client "$cfg"; then
+    log_info "created $cfg"
+  else
+    rm -rf "$dir"
+    return 1
+  fi
+}
+
+cmd_client_lifecycle() {
+  local sub="$1" id="${2:-}" yes=""
+  [ -n "$id" ] || { log_error "usage: opskit client ${sub} <id>"; return 2; }
+  valid_client_id "$id" || { log_error "invalid client id '$id'"; return 2; }
+  shift 2 || true
+  [ "${1:-}" = "--yes" ] && yes="yes"
+  [ -d "$(client_dir "$id")" ] || die "client not found: $id"
+  case "$sub" in
+    render) render_client "$id" ;;
+    deploy) deploy_client "$id" ;;
+    check) post_deploy_checks "$id" ;;
+    pause) pause_client "$id" ;;
+    resume) resume_client "$id" ;;
+    offboard) offboard_client "$id" "$yes" ;;
+  esac
+}
+
+cmd_host_bootstrap() {
+  local host="${1:-}" user="root" dry=""
+  [ -n "$host" ] || { log_error "usage: opskit host bootstrap <host> [--user U] [--dry-run]"; return 2; }
+  [[ "$host" =~ ^[A-Za-z0-9.-]+$ ]] || { log_error "invalid host '$host'"; return 2; }
+  shift
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --user) user="${2:-}"; shift 2 ;;
+      --dry-run) dry="--dry-run"; shift ;;
+      *) log_error "unknown option: $1"; return 2 ;;
+    esac
+  done
+  [[ "$user" =~ ^[a-z_][a-z0-9_-]*$ ]] || { log_error "invalid ssh user '$user'"; return 2; }
+  log_info "bootstrapping ${user}@${host} ${dry}"
+  if [ "$user" = "root" ]; then
+    ssh_run "$user" "$host" bash -s -- ${dry:+"$dry"} <"$OPSKIT_ROOT/agent/bootstrap.sh"
+  else
+    ssh_run "$user" "$host" sudo bash -s -- ${dry:+"$dry"} <"$OPSKIT_ROOT/agent/bootstrap.sh"
+  fi
+}
+
+# selftest: deploy a throwaway local client, run the post-deploy checks, always tear it down.
+cmd_selftest() {
+  local tmp rc=0 id="selftest"
+  require_tool docker "install Docker" || return 1
+  tmp="$(mktemp -d)"
+  export OPSKIT_CLIENTS_DIR="$tmp"
+  # shellcheck disable=SC2064  # expand $tmp/$id now on purpose
+  trap "OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  cmd_client_new "$id" --domain chat.selftest.localhost --name "Selftest" --local --http-port 18080 --https-port 18443 || return 1
+  deploy_client "$id" || rc=1
+  if [ "$rc" -eq 0 ]; then
+    post_deploy_checks "$id" || rc=1
+    ensure_admin "$id" >/dev/null 2>&1 || rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
+  return "$rc"
+}
+
 cmd_validate() {
   local kind="$1" file="${2:-}"
   [ -n "$file" ] || {
@@ -77,6 +188,28 @@ main() {
       shift || true
       case "$sub" in
         validate) cmd_validate "$cmd" "$@" ;;
+        new | render | deploy | check | pause | resume | offboard)
+          if [ "$cmd" != "client" ]; then
+            usage >&2
+            exit 2
+          elif [ "$sub" = "new" ]; then
+            cmd_client_new "$@"
+          else
+            cmd_client_lifecycle "$sub" "$@"
+          fi
+          ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    host)
+      case "${1:-}" in
+        bootstrap)
+          shift
+          cmd_host_bootstrap "$@"
+          ;;
         *)
           usage >&2
           exit 2
@@ -87,10 +220,7 @@ main() {
       echo "opskit llm: available in Phase 8 (BYOK model picker, ADR-011)" >&2
       exit 3
       ;;
-    selftest)
-      echo "opskit selftest: available from Phase 2" >&2
-      exit 3
-      ;;
+    selftest) cmd_selftest ;;
     *)
       usage >&2
       exit 2

@@ -27,4 +27,7 @@ def app_from_env() -> FastAPI:
     from pathlib import Path
 
     yaml_path = os.environ.get("AIBOT_CONFIG")
+    if not yaml_path and not os.environ.get("AIBOT_LLM_BASE_URL"):
+        # Bot not configured for this client yet: serve /health only (bot_enabled=false).
+        return create_app(None)
     return create_app(load_config(os.environ, Path(yaml_path) if yaml_path else None))

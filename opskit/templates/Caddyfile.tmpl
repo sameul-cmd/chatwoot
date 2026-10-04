@@ -1,0 +1,6 @@
+# Rendered by opskit for ${CLIENT_ID}.
+${CADDY_SITE} {
+	${CADDY_TLS}
+	encode gzip
+	reverse_proxy rails:3000
+}

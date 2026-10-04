@@ -34,10 +34,8 @@ setup() {
   [[ "$output" == *"MISSING"* ]]
 }
 
-@test "llm and selftest are placeholders until later phases" {
+@test "llm is a placeholder until Phase 8" {
   run "$OPSKIT" llm models demo
-  [ "$status" -eq 3 ]
-  run "$OPSKIT" selftest
   [ "$status" -eq 3 ]
 }
 

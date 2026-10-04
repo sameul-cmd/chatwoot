@@ -21,5 +21,14 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | `OPSKIT_HUB_URL`, `OPSKIT_HUB_TOKEN`, `OPSKIT_TELEGRAM_FALLBACK_*` | host agent config | shared ops-hub + fallback |
 | age public key | `opskit/keys/owner.age.pub` | private key offline only |
 
+## 3b. opskit variables
+| Name | Where | Notes |
+|---|---|---|
+| `OPSKIT_CLIENTS_DIR` | operator shell / tests | where `clients/<id>/` lives (default `opskit/clients`) |
+| `OPSKIT_BUILD_CA` | operator shell | CA bundle path for building the aibot image behind an intercepting proxy (sandbox) |
+| `SMTP_PASSWORD` | operator shell at `client render` | goes only into the stack `.env` (mode 600) |
+| `OPSKIT_CONFIRM_ID` | tests/automation only | typed-id answer for destructive commands |
+| `OPSKIT_HEALTH_TIMEOUT` | optional | seconds to wait for rails (default 300) |
+
 ## 4. Rules
 Never commit `.env`, keys, `opskit/clients/`, `opskit/hosts/`, dumps, KBs of real clients, bot audit DBs. Rotate any leaked key. Free-tier LLM only with demo data.
