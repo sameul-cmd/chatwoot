@@ -5,10 +5,19 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PIN="${1:-$(sed -n 's/^| Pinned release tag | \(v[0-9.]*\) |$/\1/p' "$ROOT/docs/UPSTREAM_CHANGES.md")}"
-
-git -C "$ROOT" rev-parse -q --verify "refs/tags/${PIN}^{commit}" >/dev/null || {
-  echo "pinned tag '${PIN}' not available locally; skipping" >&2
+# Pin = tag (preferred) or the commit SHA recorded next to it (forks may not carry the tag).
+TAG="$(sed -n 's/^| Pinned release tag | \(v[0-9.]*\) |$/\1/p' "$ROOT/docs/UPSTREAM_CHANGES.md")"
+SHA="$(sed -n 's/^| Tag SHA | \([0-9a-f]\{7,40\}\).*$/\1/p' "$ROOT/docs/UPSTREAM_CHANGES.md")"
+PIN=""
+for cand in "${1:-}" "$TAG" "$SHA"; do
+  [ -n "$cand" ] || continue
+  if git -C "$ROOT" rev-parse -q --verify "${cand}^{commit}" >/dev/null; then
+    PIN="$cand"
+    break
+  fi
+done
+[ -n "$PIN" ] || {
+  echo "pinned release (tag '${TAG}' / sha '${SHA}') not available locally; skipping" >&2
   exit 3
 }
 
