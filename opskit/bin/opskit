@@ -477,7 +477,7 @@ _selftest_bot_run() {
   port="$(cat "$tmp/llm.port")"
   gw="$(docker network inspect "${id}_default" -f '{{(index .IPAM.Config 0).Gateway}}')"
   cw_use_stack "$id" || { _selftest_row "bot: setup" FAIL "no API token"; return 1; }
-  cw_request POST "$base/teams" -H 'Content-Type: application/json' -d '{"name":"support"}' >/dev/null
+  cw_request POST "$base/teams" -H 'Content-Type: application/json' -d '{"name":"support"}' >/dev/null 2>&1 || true
   cp -r "$OPSKIT_REPO_ROOT/aibot/demo/kb" "$dir/"
   yq -y -i '.bot.handoff_team = "support"' "$dir/client.yaml"
   AIBOT_LLM_API_KEY=fake-selftest-key llm_set_key "$id" --base-url "http://${gw}:${port}/v1" --paid >/dev/null 2>&1
