@@ -20,7 +20,15 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - *(verify)* assigning a team on handoff (`POST /conversations/:id/assignments {team_id}`), the `GET /teams` lookup, and which token (bot or admin) may do it.
 - Already in the repo: `aibot/` skeleton (config with BYOK settings and the paid-tier rule, `/health`), `AIBOT_*` env rendering from `client.yaml bot:`, `SAFE_FETCH...`, the aibot container and its `/data` volume, packs' `kb_starter/faq.yaml` copied to `clients/<id>/kb/faq.yaml` (Phase 7), `opskit llm` placeholder.
 
-## Open questions for the owner (plain words; defaults in bold)
+## Owner answers (2026-10-04) — these replace the defaults below where they differ
+1. **Real key available.** The owner has an OpenAI-compatible key ready. Everything is still built and proven with the pretend AI (tests never call a real service), **and** new task 8.12 runs a real-model check once the key is in this environment (see "What I need from you": the key goes into the environment settings, never into the chat). Only the fictional demo KB is ever sent.
+2. **Mask phones and emails** before sending: as proposed.
+3. **KB search = hybrid, each is the fallback of the other** (instead of keyword-only): keyword ranking (BM25) and AI-embedding search both run when an embedding model is configured and their results are merged (reciprocal rank fusion); if the embedding service is not configured or fails, keyword ranking alone is used; if keyword ranking finds nothing (Banglish, different wording), embedding search alone is used. No new software: embeddings come from the same OpenAI-compatible service (`/embeddings`), vectors are cached in the bot's SQLite by content hash, similarity is computed in plain Python (the KB is small). Costs one extra small AI call per question (the embedding of the question).
+4. **Bot wording:** draft bn + en, Bangla needs the owner's approval before real clients: as proposed.
+5. **Upset customers = word list plus AI mood check** (instead of words only): the same answer call also returns `upset: true/false` (no second AI call); either the word list or the AI flag hands off with reason `upset`.
+6. **Handoff:** open + label + team if set: as proposed. 7. **3 replies / confidence 0.7:** as proposed. 8. **enable / disable commands:** as proposed. 9. **Counts and unanswered list kept on the host for Phase 9:** as proposed (default).
+
+## Open questions for the owner (plain words; defaults in bold) — original text, answered above
 1. **Test AI.** The sandbox must not call real AI services in tests. **Default:** everything is proven with a scripted pretend AI (a small fake server); you run `aibot eval` with your real key on your own device before the first paying client. If you prefer, give me a throw-away key later and I try one real call, but tests never use it.
 2. **Customer privacy towards the AI provider.** Customer messages go to your AI provider. **Default:** phone numbers and email addresses in a customer's text are replaced by `[phone]` / `[email]` before sending, and the provider must be a paid or owner-owned key (the existing rule). Names are not removed.
 3. **How the bot finds answers.** **Default:** the client's `kb/faq.yaml` (question + answer, bn and en; plus optional `kb/*.md` notes), searched with a simple keyword ranking (BM25, no new software to install); questions with an empty answer are ignored. A list of "also called" words per answer handles Banglish ("dam koto", "delivery kobe").
@@ -38,16 +46,16 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Acceptance:** findings written; fixtures saved (fictional data only).
 
 ### [ ] 8.2 — Pure logic: language, KB and retrieval
-- **Goal:** `lang.py` (Bangla script / English / Banglish by script ratio and a small Banglish word list), `kb.py` (load `faq.yaml` + `*.md`, chunk, ignore empty answers, aliases), `retrieval.py` (BM25 over bn + en tokens, top-k with scores). No network, no new dependencies.
-- **Acceptance:** pytest: language cases (bn, en, mixed, Banglish, numbers only), retrieval picks the right entry for bn/en/Banglish questions and nothing for unrelated ones, empty answers ignored.
+- **Goal:** `lang.py` (Bangla script / English / Banglish by script ratio and a small Banglish word list), `kb.py` (load `faq.yaml` + `*.md`, chunk, ignore empty answers, aliases), `retrieval.py` (BM25 over bn + en tokens; cosine similarity over cached vectors; reciprocal rank fusion that merges both and falls back to whichever one is available or finds something). No network, no new dependencies.
+- **Acceptance:** pytest: language cases (bn, en, mixed, Banglish, numbers only), retrieval picks the right entry for bn/en/Banglish questions and nothing for unrelated ones, empty answers ignored; with vectors missing the ranking equals BM25, with BM25 finding nothing the vector result is used, with both the fused order is stable.
 
 ### [ ] 8.3 — Pure logic: policy and handoff rules
 - **Goal:** `policy.py`: human-request keywords, complaint words, off-topic (no snippet found), turn limit, confidence gate (`>= min_confidence` and at least one snippet used), and the **fact guard** (numbers, currency and delivery/return/price claims in an answer must appear in the snippets it used, otherwise hand off). `messages.py`: the bot's fixed messages (disclosure, handoff, off-topic) in bn/en with `review_required` flags and client overrides. Every handoff has a named reason.
 - **Acceptance:** pytest covers each handoff trigger separately (human request in bn and en, complaint, off-topic, turn limit, low confidence, no snippet used, invented price, LLM error), disclosure on the first bot message only, and "never claims to be human".
 
 ### [ ] 8.4 — LLM adapter (BYOK) with a fake
-- **Goal:** `llm.py`: one OpenAI-compatible `/chat/completions` client (`base_url`, key from the env var named in `api_key_env`, model, effort sent as `reasoning_effort` or the configured name; `max` mapped down per endpoint if refused, never failing the reply, A-001); strict JSON reply `{answer, confidence, used_ids, handoff}` parsed from plain or fenced JSON; timeouts and one retry; phone/email masking (question 2); prompt files in `aibot/prompts/` (answer only from snippets; business topics only; Bangla/English; never claim to be human). A scripted **fake LLM server** in the tests.
-- **Acceptance:** pytest with the fake: good JSON, fenced JSON, garbage, timeout, HTTP 400 on the effort field (falls back), no key in logs/repr, phone number masked in the outgoing request.
+- **Goal:** `llm.py`: one OpenAI-compatible `/chat/completions` client plus `/embeddings` (optional `bot.embeddings.model`; vectors cached by content hash; failure = silent fallback to keyword ranking and a counter) (`base_url`, key from the env var named in `api_key_env`, model, effort sent as `reasoning_effort` or the configured name; `max` mapped down per endpoint if refused, never failing the reply, A-001); strict JSON reply `{answer, confidence, used_ids, handoff, upset}` (the AI mood flag, question 5) parsed from plain or fenced JSON; timeouts and one retry; phone/email masking (question 2); prompt files in `aibot/prompts/` (answer only from snippets; business topics only; Bangla/English; never claim to be human). A scripted **fake LLM server** in the tests.
+- **Acceptance:** pytest with the fake: embeddings success/failure/not configured, good JSON, fenced JSON, garbage, timeout, HTTP 400 on the effort field (falls back), no key in logs/repr, phone number masked in the outgoing request.
 
 ### [ ] 8.5 — Chatwoot client and the webhook
 - **Goal:** `chatwoot.py` (send message, private note, labels, custom attributes, toggle status, assign team, list messages: all behind one class, as TECH_ARCHITECTURE section 7 asks), `app.py` `POST /webhook/<secret>`: check the secret path, the signature, account and inbox; ignore outgoing/bot/private/non-pending; **idempotent on the message id** (SQLite); answer 200 at once and work in a background task; `audit.py` (SQLite with a schema-version table; question, answer, used ids, confidence, handoff reason, kept `audit_days`); logs never contain message text. A fake Chatwoot for tests.
@@ -73,12 +81,21 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Goal:** on the demo stack with the fake AI server reachable from the aibot container: `bot enable`, a visitor asks a KB question in Bangla and in English and gets the cited answer with the disclosure on the first message; "মানুষ চাই" and "talk to a human", an off-topic question, a complaint, and the fourth message all hand off (status open, label `ai-handoff`, team if set); AI down (fake stopped) hands off with reason `llm_error`; `bot disable` stops it; no message text in the aibot logs; client mode refuses to start without the paid flag. Add these rows to `opskit selftest`.
 - **Acceptance:** all rows as expected in `opskit selftest`.
 
-### [ ] 8.11 — Docs, verification, security review
+### [ ] 8.11 — Docs, verification, security review (written after 8.12 so the real-model result is in the report)
 - **Goal:** `docs/runbooks/bot.md` (enable, KB filling, BYOK setup, going live gate, switching off), ADR for the bot design, ASSUMPTIONS, ENVIRONMENT, PROGRESS report; security review (key only in env files mode 600, never in logs/repr/errors; webhook auth; masked PII; SQLite on the host only; no inbound ports; the bot cannot be tricked into other topics by the prompt tests); upstream-path test still 0 files.
 - **Acceptance:** `opskit/bin/check` passes; report written.
 
+### [ ] 8.12 — Real-model check with the owner's key (only if the key is available in this environment)
+- **Goal:** one real round trip with the owner's endpoint: `opskit llm models` lists the models, an embedding call works, one answer call returns valid JSON, then `opskit bot eval` on the fictional demo KB and test set against the real model, and the demo conversation flow once with the real model. Record the score and what failed. If no key or the host is blocked: skipped, listed as NOT VERIFIED, nothing else waits on it.
+- **Acceptance:** the real-model score is recorded in PROGRESS and the runbook; the key never appears in output, logs or files in the repo.
+
 ## Not in this phase (on purpose)
-Real-model quality scoring (needs your key, your device), the V2 add-ons (order capture, booking, FAQ editor UI, agent assist, owner digest; only the extension points are built), learning from conversations, voice/images/attachments (the bot hands off on attachments it cannot read), Chatwoot Help Center import (optional later), pushing metrics to a hub, more than one bot per client.
+Real-model scoring on the client's own KB (the demo KB is scored in 8.12), the V2 add-ons (order capture, booking, FAQ editor UI, agent assist, owner digest; only the extension points are built), learning from conversations, voice/images/attachments (the bot hands off on attachments it cannot read), Chatwoot Help Center import (optional later), pushing metrics to a hub, more than one bot per client.
 
 ## What I need from you
-Reply **"all defaults ok"** or the question numbers you want changed. Nothing else is needed to start. Before a paying client goes live (not blocking the build): your own AI endpoint and a paid or owner-owned key, about 30 minutes to proofread the bot's Bangla messages, and the real `aibot eval` run.
+Nothing to start building. For the real-model check (8.12), when you are ready:
+1. Open the cloud environment menu in the session title bar, then **Edit**.
+2. Under API credentials (or Environment variables if there is no such section) add `AIBOT_LLM_API_KEY` = your key. **Never paste the key into this chat.**
+3. Under **Network access**, choose Custom and add your AI provider's host (for example `api.openai.com`, or whatever host your OpenAI-compatible service uses) to the allowed domains, keeping the default package-manager list.
+4. Tell me the **base URL** (not secret, e.g. `https://api.openai.com/v1`), the **chat model** name and the **embedding model** name you want to try. A **new session** picks up the key; I will say when to start one (all work is on GitHub, so nothing is lost).
+Before a paying client goes live (not blocking the build): about 30 minutes to proofread the bot's Bangla messages, and your own `aibot eval` on the client's real KB.

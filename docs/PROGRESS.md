@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 7 - Industry starter packs (in progress; Phase 6 done and verified)
-- **Current task:** Phase 7 done and verified; Phase 8 planned (`docs/tasks/phase-8.md`), waiting for the owner's answers to its open questions
+- **Current task:** Phase 8 planned and answered (`docs/tasks/phase-8.md`); start at 8.1 when the owner says go
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -41,7 +41,7 @@
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
 | 7 | Industry starter packs bn + en | Done locally (Bangla NOT yet proofread by the owner; real clients NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. 6 pack selftest rows, 2026-10-04 |
-| 8 | aibot | Planned (task file `docs/tasks/phase-8.md`, owner answering open questions) | — |
+| 8 | aibot | Planned and approved with owner changes (hybrid search, AI mood check, real-key check 8.12); not started | — |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |
 | 11 | Field readiness | Not started | — |
