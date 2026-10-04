@@ -1,5 +1,7 @@
 # Handover - continuing on another device
 
+> **Using a different AI or IDE?** Start with `docs/ADOPT.md`: it has a paste-in prompt that works with any tool and the full current state.
+
 Everything is in git. Nothing else needs to be copied except secrets you create yourself.
 
 ## 1. Get the code

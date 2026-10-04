@@ -1,5 +1,7 @@
 # Start here — Inbox Ops Kit (Claude Code version)
 
+> **Continuing with any AI or IDE?** Read `docs/ADOPT.md` (paste-in prompt + current state). This file is the original Claude Code setup note.
+
 This package is added **on top of your fork** of Chatwoot. It never overwrites Chatwoot's own files (their `AGENTS.md`, `CLAUDE.md`, `.gitignore`, `README.md` stay as they are). Nothing updates from upstream automatically.
 
 All commands run in **WSL2 Ubuntu**. Open the repo in VS Code via Remote-WSL and run `claude` inside WSL.

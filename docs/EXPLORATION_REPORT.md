@@ -74,6 +74,10 @@ Not applicable yet (no UI review done); bot answer quality is Phase 8.
 - **The bot token may NOT**: list teams (`GET /teams` -> "not authorized for bots") or list a conversation's messages. So the team id is looked up once with the admin token by `opskit bot enable` and given to the bot; the bot counts its own replies in its own database.
 - API header through Caddy must be `api-access-token` (dashes), again confirmed: the underscore form is dropped and gives "You need to sign in".
 
+## 5e. Image finding (4 Oct 2026, while planning Phase 10)
+- Chatwoot's `.github/workflows/publish_foss_docker.yml` builds `linux/amd64` **and** `linux/arm64`, strips `enterprise/` and `spec/enterprise/`, sets `CW_EDITION=ce`, and publishes one manifest list per `-ce` tag.
+- `docker manifest inspect chatwoot/chatwoot:v4.18.0-ce` shows `amd64` and `arm64` entries. This contradicts the SPEC assumption (R1/R6) that official images are amd64-only. Not yet verified: that the arm64 image boots and runs our stack on a real ARM host (Phase 10.4 / 11.5).
+
 ## 6. Matches the SPEC? (agent's view)
 Mostly yes. Answers to *(verify)* items so far:
 - CE image tag format: `chatwoot/chatwoot:v4.18.0-ce` exists.

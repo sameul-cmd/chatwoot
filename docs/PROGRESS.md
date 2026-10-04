@@ -2,10 +2,10 @@
 
 ## Current status
 - **Current phase:** Phase 8 - aibot (built and verified with the pretend AI; real-AI check 8.12 pending the owner's key)
-- **Current task:** Phase 8 tasks 8.1-8.11 done; 8.12 (real-model check) waits for the owner's key in a new session. Then plan Phase 9
+- **Current task:** Phase 8 tasks 8.1-8.11 done; 8.12 (real-model check) waits for the owner's key in a new session. Phases 9, 10, 11 are planned. **New session: read `docs/ADOPT.md` first.**
 - **Last updated:** 2026-10-04
 
-## How we work with the owner (read this first in a new chat)
+## How we work with the owner (read this first in a new chat; the tool-neutral entry point is `docs/ADOPT.md`)
 - The owner is non-technical / semi-technical: explain in plain words, define any technical term, give numbered "do this" steps for anything the owner must do, say what can be skipped and what you will handle yourself. Never ask the owner to type commands unless unavoidable; then give the exact text and what it does.
 - Rhythm per phase: write `docs/tasks/phase-N.md` with open questions in plain words and **bold defaults**, wait for the owner ("all defaults ok" or changes), then build task by task, run `opskit/bin/check`, write the verification report here, commit + push to branch `claude/wizardly-babbage-ui2rpa`, then summarize in plain words and ask about the next phase. Report honestly what is NOT verified.
 - Binding owner decisions so far: BYOK OpenAI-compatible LLM (ADR-011); whole backup encrypted to owner key + host key (ADR-015); Telegram-only alerts, no hub (ADR-016); GitHub Actions stays OFF (ADR-013); white-label = owner decision pending, default Chatwoot branding (docs/ADDONS.md); the 8 add-ons in docs/ADDONS.md are V2 (after the first client is live); live upgrades only in the client's off-hours window by default (configurable per client).
@@ -42,9 +42,9 @@
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
 | 7 | Industry starter packs bn + en | Done locally (Bangla NOT yet proofread by the owner; real clients NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. 6 pack selftest rows, 2026-10-04 |
 | 8 | aibot | Done with a pretend AI (real-model quality, real clients NOT VERIFIED; task 8.12 pending the owner's key) | `opskit/bin/check` passes except one stale test fixed after (218 bats pass), selftest incl. 10 bot rows, 2026-10-04 |
-| 9 | Monthly care report | Not started | — |
-| 10 | Own CE images incl. arm64 | Not started | — |
-| 11 | Field readiness | Not started | — |
+| 9 | Monthly care report | Planned (`docs/tasks/phase-9.md`, 6 owner questions with defaults) | — |
+| 10 | Own CE images incl. arm64 | RE-SCOPED: official `chatwoot/chatwoot:v4.18.0-ce` already has arm64 (`docs/tasks/phase-10.md`); likely just verify + digest pinning | — |
+| 11 | Field readiness (remote deploy, real VPS, operator guide) | Planned (`docs/tasks/phase-11.md`); biggest remaining risk | — |
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
