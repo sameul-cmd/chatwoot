@@ -33,5 +33,8 @@
 ### ADR-012: Allow private-network webhooks on client stacks
 - **Status:** accepted (Phase 0 finding) — **Decision:** client `.env` sets `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true` so Chatwoot can call `http://aibot:8000` inside the compose network; aibot also verifies `X-Chatwoot-Signature`. **Consequences:** weaker SSRF guard for that install; only dedicated stacks; revisit if shared multi-account mode (V2) is built.
 
+### ADR-013: GitHub Actions stays disabled in the fork
+- **Status:** accepted (owner, 2026-10-04) — **Decision:** no CI on GitHub for now; `opskit/bin/check` is the gate, run locally. **Consequences:** `opskit-ci.yml` is dormant; Phase 10 (multi-arch image build) needs Actions, so revisit then (disable Chatwoot's workflows per-file, or an approved ledger patch removing them).
+
 ### ADR-010: Two IDE packages share docs
 - **Status:** accepted — Kilo: `AGENTS.fork.md` + `kilo.jsonc` + `.kilo/`. Factory: `.factory/AGENTS.md` + `.factory/skills/`. Claude Code (this fork): `.claude/CLAUDE.md` + `.claude/skills/`.

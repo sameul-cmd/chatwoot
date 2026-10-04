@@ -55,9 +55,9 @@ Spec: SPEC Section 17 (Phase 1), Sections 3, 6, 13.6, 16. Rules: `.claude/CLAUDE
 - **Acceptance checks:** passes on a clean tree; deliberately breaking a script makes it fail
 
 ### [x] 1.9 — CI workflow `opskit-ci.yml`
-- **Goal:** GitHub Actions workflow that runs `opskit/bin/check --quick` on push/PR to our paths only (`opskit/**`, `aibot/**`, `docs/**`, workflow file). Written here; **you enable only this workflow on GitHub** (instructions given in chat).
+- **Goal:** GitHub Actions workflow that runs `opskit/bin/check --quick` on push/PR to our paths only (`opskit/**`, `aibot/**`, `docs/**`, workflow file). Written here; file written only. NOTE: GitHub Actions stays disabled for the fork (see PROGRESS Setup notes), so it does not run; checks run locally.
 - **Files likely touched:** `.github/workflows/opskit-ci.yml` (new file, our path)
-- **Acceptance checks:** YAML valid (actionlint if available); path filters present; runs green on GitHub after you enable it
+- **Acceptance checks:** YAML valid (actionlint if available); path filters present; (not run - Actions disabled by owner decision)
 
 ### [x] 1.10 — Ledger, sync doc and wrap-up
 - **Goal:** complete `docs/UPSTREAM_CHANGES.md` (empty ledger = no upstream edits), `docs/UPSTREAM_SYNC.md` checked against reality, add `docs/HANDOVER.md` (what to run on the owner's device), update PROGRESS, run `/verify-phase`.

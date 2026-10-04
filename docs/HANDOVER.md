@@ -25,3 +25,6 @@ Everything is in git. Nothing else needs to be copied except secrets you create 
 
 ## 4. Secrets
 Never commit `.env`, keys, `opskit/clients/`, `opskit/hosts/`. The sandbox test passwords were throw-away and are gone with the sandbox.
+
+## 5. GitHub Actions
+Actions is intentionally OFF for this fork. `opskit-ci.yml` is present but does not run; run `opskit/bin/check` locally instead. Do not enable Actions without first handling Chatwoot's own scheduled workflows (see docs/PROGRESS.md).
