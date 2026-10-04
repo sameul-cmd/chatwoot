@@ -40,6 +40,10 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/channels_health.sh"
 # shellcheck source=../lib/monitor.sh
 . "$OPSKIT_ROOT/lib/monitor.sh"
+# shellcheck source=../lib/smoke.sh
+. "$OPSKIT_ROOT/lib/smoke.sh"
+# shellcheck source=../lib/upgrade.sh
+. "$OPSKIT_ROOT/lib/upgrade.sh"
 # shellcheck source=../lib/checks.sh
 . "$OPSKIT_ROOT/lib/checks.sh"
 
@@ -61,6 +65,8 @@ Commands:
   restore <id> --from <ts|latest> --target staging [--identity key] [--overwrite --yes]   restore into a fresh staging stack
   monitor run <id> [--channels] | status <id>   run the health checks (host: every 5 min; --channels: every 15 min) / show state
   alerts set-telegram|test <id>   save the Telegram bot settings (env TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID) / send a test message
+  upgrade <id> --to <tag> --info|--stage|--apply [--yes] [--outage-fix]
+                              safe upgrade: release info / rehearsal on a copy / live upgrade with automatic rollback
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
   pack validate <file>        validate a pack item file against the schema
@@ -100,7 +106,7 @@ cmd_doctor() {
 valid_client_id() { [[ "${1:-}" =~ ^[a-z][a-z0-9-]{1,30}$ ]]; }
 
 cmd_client_new() {
-  local id="${1:-}" domain="" name="" target="remote" http_port="" https_port=""
+  local id="${1:-}" domain="" name="" target="remote" http_port="" https_port="" tag="v4.18.0-ce"
   [ -n "$id" ] || { log_error "usage: opskit client new <id> --domain <domain> [--name <name>] [--local [--http-port N --https-port N]]"; return 2; }
   valid_client_id "$id" || { log_error "invalid client id '$id' (lowercase letters, digits, dashes; 2-31 chars)"; return 2; }
   shift
@@ -109,6 +115,7 @@ cmd_client_new() {
       --domain) domain="${2:-}"; shift 2 ;;
       --name) name="${2:-}"; shift 2 ;;
       --local) target="local"; shift ;;
+      --tag) tag="${2:-}"; shift 2 ;;
       --http-port) http_port="${2:-}"; shift 2 ;;
       --https-port) https_port="${2:-}"; shift 2 ;;
       *) log_error "unknown option: $1"; return 2 ;;
@@ -122,7 +129,7 @@ cmd_client_new() {
   [ ! -e "$cfg" ] || die "client '$id' already exists ($cfg)"
   mkdir -p "$dir"
   # shellcheck disable=SC2016  # envsubst variable list must stay literal
-  CLIENT_ID="$id" CLIENT_NAME="$name" CLIENT_DOMAIN="$domain" CW_TAG="v4.18.0-ce" DEPLOY_TARGET="$target" \
+  CLIENT_ID="$id" CLIENT_NAME="$name" CLIENT_DOMAIN="$domain" CW_TAG="$tag" DEPLOY_TARGET="$target" \
     envsubst '${CLIENT_ID} ${CLIENT_NAME} ${CLIENT_DOMAIN} ${CW_TAG} ${DEPLOY_TARGET}' <"$OPSKIT_ROOT/templates/client.yaml.tmpl" >"$cfg"
   [ -z "$http_port" ] || printf '  http_port: %s\n' "$http_port" >>"$cfg"
   [ -z "$https_port" ] || printf '  https_port: %s\n' "$https_port" >>"$cfg"
@@ -237,6 +244,72 @@ cmd_selftest() {
   return "$rc"
 }
 
+# selftest upgrade: deploy on the OLD release, seed data, rehearse on a copy, prove the automatic rollback with an
+# injected failure, then do the real upgrade. Releases can be overridden: OPSKIT_SELFTEST_FROM / OPSKIT_SELFTEST_TO.
+cmd_selftest_upgrade() {
+  local tmp rc=0 id="selfup" from to key dir mig0 conv0 detail out v want_from want_to
+  from="${OPSKIT_SELFTEST_FROM:-v4.17.1-ce}"
+  to="${OPSKIT_SELFTEST_TO:-v4.18.0-ce}"
+  require_tool docker "install Docker" || return 1
+  require_tool age-keygen "apt install age" || return 1
+  tmp="$(mktemp -d)"
+  export OPSKIT_CLIENTS_DIR="$tmp" OPSKIT_ALERT_DIR="$tmp/alerts"
+  key="$tmp/selftest-owner.key"
+  age-keygen -o "$key" >/dev/null 2>&1
+  export OPSKIT_AGE_RECIPIENT
+  OPSKIT_AGE_RECIPIENT="$(age-keygen -y "$key")"
+  dir="$tmp/$id"
+  # shellcheck disable=SC2064
+  trap "teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  cmd_client_new "$id" --domain chat.selfup.localhost --name "Selfup" --local --tag "$from" --http-port 19080 --https-port 19443 || return 1
+  deploy_client "$id" || return 1
+  want_from="${from%-ce}"
+  want_from="${want_from#v}"
+  want_to="${to%-ce}"
+  want_to="${want_to#v}"
+  if ! cw_use_stack "$id"; then _selftest_row "seed data on ${from}" FAIL "no API token"; return 1; fi
+  if ! detail="$(cw_seed_demo 2>&1)"; then _selftest_row "seed data on ${from}" FAIL "${detail:-failed}"; return 1; fi
+  mig0="$(_psql_sid "$id" 'SELECT count(*) FROM schema_migrations')"
+  conv0="$(_psql_sid "$id" 'SELECT count(*) FROM conversations')"
+  _selftest_row "deployed on ${from} with data" PASS "${conv0} conversation(s), ${mig0} migrations"
+
+  if out="$(upgrade_stage "$id" "$to" 2>&1)"; then
+    _selftest_row "staging rehearsal on ${to}" PASS "smoke tests passed on the copy; migrations applied: $(jq -r .migrations_applied "$dir/upgrade/staging-${to}.json")"
+  else
+    _selftest_row "staging rehearsal on ${to}" FAIL "$(printf '%s' "$out" | tail -n1 | cut -c1-120)"
+    return 1
+  fi
+
+  OPSKIT_UPGRADE_FAIL_SMOKE=production OPSKIT_CONFIRM_ID="$id" upgrade_apply "$id" "$to" yes "" >/dev/null 2>&1 && rc=1
+  v="$(curl -ks --resolve chat.selfup.localhost:19443:127.0.0.1 https://chat.selfup.localhost:19443/api | jq -r .version)"
+  if [ "$rc" -eq 0 ] && [ "$(yq -r .install.tag "$dir/client.yaml")" = "$from" ] && [ "${v:-?}" = "$want_from" ] \
+    && [ "$(_psql_sid "$id" 'SELECT count(*) FROM schema_migrations')" = "$mig0" ] && [ "$(_psql_sid "$id" 'SELECT count(*) FROM conversations')" = "$conv0" ]; then
+    _selftest_row "injected failure -> automatic rollback" PASS "back on ${from}, database restored, ${conv0} conversation(s) intact"
+  else
+    _selftest_row "injected failure -> automatic rollback" FAIL "tag=$(yq -r .install.tag "$dir/client.yaml") version=${v:-?}"
+    return 1
+  fi
+
+  if OPSKIT_CONFIRM_ID="$id" upgrade_apply "$id" "$to" yes "" >/dev/null 2>&1; then
+    v="$(curl -ks --resolve chat.selfup.localhost:19443:127.0.0.1 https://chat.selfup.localhost:19443/api | jq -r .version)"
+    if [ "$(yq -r .install.tag "$dir/client.yaml")" = "$to" ] && [ "${v:-?}" = "$want_to" ] \
+      && [ "$(_psql_sid "$id" 'SELECT count(*) FROM conversations')" = "$conv0" ] && [ "$(_psql_sid "$id" 'SELECT count(*) FROM schema_migrations')" -gt "$mig0" ]; then
+      _selftest_row "real upgrade to ${to}" PASS "version ${v}, migrations $(_psql_sid "$id" 'SELECT count(*) FROM schema_migrations') (was ${mig0}), data intact"
+    else
+      _selftest_row "real upgrade to ${to}" FAIL "state does not match after the upgrade"; rc=1
+    fi
+  else
+    _selftest_row "real upgrade to ${to}" FAIL "upgrade command failed"; rc=1
+  fi
+  if [ "$(jq -r .result "$dir/upgrade/history.jsonl" | grep -c -E '^(success|rolled_back)$')" -ge 2 ]; then
+    _selftest_row "upgrade history written" PASS "$(jq -r .result "$dir/upgrade/history.jsonl" | tr '\n' ' ')"
+  else
+    _selftest_row "upgrade history written" FAIL "history incomplete"; rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then echo "SELFTEST UPGRADE PASSED"; else echo "SELFTEST UPGRADE FAILED"; fi
+  return "$rc"
+}
+
 # _selftest_monitoring ID TMPDIR -> acceptance scenarios of SPEC Phase 4 against a pretend Telegram
 _selftest_monitoring() {
   local id="$1" tmp="$2" fakepid real rc=0 st log portf port
@@ -346,6 +419,34 @@ main() {
           ;;
       esac
       ;;
+    upgrade)
+      local uid="${1:-}" uto="" umode="" uyes="" uout=""
+      valid_client_id "$uid" || { log_error "usage: opskit upgrade <id> --to <tag> --info|--stage|--apply [--yes] [--outage-fix]"; exit 2; }
+      [ -d "$(client_dir "$uid")" ] || die "client not found: $uid"
+      shift
+      while [ $# -gt 0 ]; do
+        case "$1" in
+          --to) uto="${2:-}"; shift 2 ;;
+          --info) umode="info"; shift ;;
+          --stage) umode="stage"; shift ;;
+          --apply) umode="apply"; shift ;;
+          --yes) uyes="yes"; shift ;;
+          --outage-fix) uout="yes"; shift ;;
+          *) log_error "unknown option: $1"; exit 2 ;;
+        esac
+      done
+      _tag_valid "$uto" || { log_error "--to must be a Community Edition tag like v4.18.0-ce"; exit 2; }
+      _require_local "$uid"
+      case "$umode" in
+        info) upgrade_info "$uid" "$uto" ;;
+        stage) upgrade_stage "$uid" "$uto" ;;
+        apply) upgrade_apply "$uid" "$uto" "$uyes" "$uout" ;;
+        *)
+          log_error "choose one of --info, --stage, --apply"
+          exit 2
+          ;;
+      esac
+      ;;
     monitor)
       local msub="${1:-}" mid="${2:-}"
       valid_client_id "$mid" || { log_error "usage: opskit monitor run|status <id>"; exit 2; }
@@ -415,7 +516,9 @@ main() {
       echo "opskit llm: available in Phase 8 (BYOK model picker, ADR-011)" >&2
       exit 3
       ;;
-    selftest) cmd_selftest ;;
+    selftest)
+      if [ "${1:-}" = "upgrade" ]; then cmd_selftest_upgrade; else cmd_selftest; fi
+      ;;
     *)
       usage >&2
       exit 2

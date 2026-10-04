@@ -65,11 +65,13 @@ _wait_container_healthy() { # SID SERVICE TIMEOUT
 # _staging_config SRC DST SID -> staging copy of client.yaml: new id, local target, ports +100, no backup/remote settings
 _staging_config() {
   python3 - "$1" "$2" "$3" <<'PY'
-import sys, yaml
+import os, sys, yaml
 src, dst, sid = sys.argv[1:4]
 c = yaml.safe_load(open(src))
 c["client_id"] = sid
 c.pop("backup", None)
+if os.environ.get("OPSKIT_STAGING_TAG"):
+    c.setdefault("install", {})["tag"] = os.environ["OPSKIT_STAGING_TAG"]
 d = c.setdefault("deploy", {})
 d["target"] = "local"
 d["http_port"] = int(d.get("http_port", 8080)) + 100
@@ -174,6 +176,25 @@ restore_client() {
 
 _psql_sid() { dc "$1" exec -T postgres psql -U postgres -d chatwoot -tA -c "$2" 2>/dev/null | tr -d '\r' | head -n1; }
 
+# verify_attachment_checksum SID BACKUP_DIR -> prints pass(...) | fail(...) | warn(...) | skipped(...)
+# The newest attachment recorded in the manifest must exist in the stack's storage with the same MD5 and size.
+verify_attachment_checksum() {
+  local sid="$1" bdir="$2" sample key sum size path got
+  if [ "$(jq -r .storage_included "$bdir/manifest.json")" != "true" ]; then
+    echo "skipped(storage not in backup)"
+    return 0
+  fi
+  sample="$(jq -r '.sample_blob // empty | [.key,.checksum,.byte_size] | @tsv' "$bdir/manifest.json")"
+  if [ -z "$sample" ]; then
+    echo "warn(no attachments in this backup to test)"
+    return 0
+  fi
+  IFS=$'\t' read -r key sum size <<<"$sample"
+  path="/app/storage/${key:0:2}/${key:2:2}/${key}"
+  got="$(dc "$sid" exec -T rails ruby -rdigest -e "p=ARGV[0]; puts(File.exist?(p) ? Digest::MD5.base64digest(File.binread(p)) + '|' + File.size(p).to_s : 'missing')" "$path" </dev/null 2>/dev/null | tail -n1)"
+  if [ "$got" = "${sum}|${size}" ]; then echo "pass(newest attachment matches checksum)"; else echo "fail(${got:-no answer})"; fi
+}
+
 # backup_verify ID [--identity FILE] [--keep] -> restore test; writes verify/<ts>.json; alerts on failure
 backup_verify() {
   local id="$1" identity="" keep=0 sid bdir started rc=0 login conv attach escrow status out vdir
@@ -193,7 +214,7 @@ backup_verify() {
   _staging_exists "$sid" && teardown_staging "$sid"
   login="skipped" conv="skipped" attach="skipped"
   if restore_to_staging "$id" "$bdir" "$identity"; then
-    local code want_c want_m got_c got_m sample key sum size path got_sum
+    local code want_c want_m got_c got_m
     # 1. login with the admin account
     load_secrets "$(client_dir "$sid")/secrets.env"
     local email
@@ -209,18 +230,7 @@ backup_verify() {
     got_c="$(_psql_sid "$sid" 'SELECT count(*) FROM conversations')"
     got_m="$(_psql_sid "$sid" 'SELECT coalesce(max(id),0) FROM conversations')"
     if [ "$got_c" = "$want_c" ] && [ "$got_m" = "$want_m" ]; then conv="pass(${got_c} conversations, newest #${got_m})"; else conv="fail(expected ${want_c}/#${want_m}, got ${got_c:-?}/#${got_m:-?})"; fi
-    # 3. attachment: newest file blob exists and matches its recorded checksum
-    sample="$(jq -r '.sample_blob // empty | [.key,.checksum,.byte_size] | @tsv' "$bdir/manifest.json")"
-    if [ "$(jq -r .storage_included "$bdir/manifest.json")" != "true" ]; then
-      attach="skipped(storage not in backup)"
-    elif [ -z "$sample" ]; then
-      attach="warn(no attachments in this backup to test)"
-    else
-      IFS=$'\t' read -r key sum size <<<"$sample"
-      path="/app/storage/${key:0:2}/${key:2:2}/${key}"
-      got_sum="$(dc "$sid" exec -T rails ruby -rdigest -e "p=ARGV[0]; puts(File.exist?(p) ? Digest::MD5.base64digest(File.binread(p)) + '|' + File.size(p).to_s : 'missing')" "$path" 2>/dev/null | tail -n1)"
-      if [ "$got_sum" = "${sum}|${size}" ]; then attach="pass(newest attachment matches checksum)"; else attach="fail(${got_sum:-no answer})"; fi
-    fi
+    attach="$(verify_attachment_checksum "$sid" "$bdir")"
   else
     login="fail(restore did not complete)"
     conv="fail(restore did not complete)"

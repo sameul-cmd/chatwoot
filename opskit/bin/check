@@ -43,6 +43,7 @@ step bats run_bats
 step aibot run_aibot
 if [ "$QUICK" -eq 0 ]; then
   step selftest "$ROOT/opskit/bin/opskit" selftest
+  step selftest-upgrade "$ROOT/opskit/bin/opskit" selftest upgrade
 fi
 
 echo

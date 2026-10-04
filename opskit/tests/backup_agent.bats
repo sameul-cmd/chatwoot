@@ -23,6 +23,8 @@ case "$all" in
   *"count(*) FROM conversations"*) echo 7 ;;
   *"max(id)"*) echo 42 ;;
   *"count(*) FROM active_storage_attachments"*) echo 1 ;;
+  *"max(version)"*) echo 20260831000000 ;;
+  *"count(*) FROM schema_migrations"*) echo 812 ;;
   *active_storage_blobs*) echo "ab12|Yh1x==|5" ;;
   *"tar czf"*) tar czf - -C "$FAKE_STORAGE" . ;;
   *) echo "fake docker: unhandled: $all" >&2; exit 9 ;;
@@ -46,6 +48,8 @@ run_backup() {
   [ -s "$dest/escrow.tar.age" ]
   [ "$(jq -r .conversations "$dest/manifest.json")" = "7" ]
   [ "$(jq -r .latest_conversation_id "$dest/manifest.json")" = "42" ]
+  [ "$(jq -r .schema_version "$dest/manifest.json")" = "20260831000000" ]
+  [ "$(jq -r .migrations_count "$dest/manifest.json")" = "812" ]
   [ "$(jq -r .sample_blob.key "$dest/manifest.json")" = "ab12" ]
   [ "$(jq -r .chatwoot_tag "$dest/manifest.json")" = "v4.18.0-ce" ]
   [ "$(jq -r '.files["db.dump.age"].bytes' "$dest/manifest.json")" -gt 0 ]

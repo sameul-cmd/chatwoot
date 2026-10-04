@@ -76,6 +76,8 @@ q() { dc exec -T postgres psql -U postgres -d chatwoot -tA -c "$1" 2>/dev/null |
 CONV_COUNT="$(q 'SELECT count(*) FROM conversations')"
 CONV_MAX="$(q 'SELECT coalesce(max(id),0) FROM conversations')"
 ATT_COUNT="$(q 'SELECT count(*) FROM active_storage_attachments')"
+SCHEMA_VERSION="$(q "SELECT coalesce(max(version),'0') FROM schema_migrations")"
+MIGRATIONS_COUNT="$(q 'SELECT count(*) FROM schema_migrations')"
 SAMPLE="$(q "SELECT key||'|'||checksum||'|'||byte_size FROM active_storage_blobs ORDER BY id DESC LIMIT 1")"
 
 # integrity: every file non-empty (the dump was checked with pg_restore before it was encrypted)
@@ -96,8 +98,8 @@ if [ -n "$SAMPLE" ]; then
   IFS='|' read -r s_key s_sum s_size <<<"$SAMPLE"
   sample_json="{\"key\":\"$s_key\",\"checksum\":\"$s_sum\",\"byte_size\":${s_size:-0}}"
 fi
-printf '{"client_id":"%s","timestamp":"%s","chatwoot_tag":"%s","encrypted":true,"recipients":%s,"storage_included":%s,"conversations":%s,"latest_conversation_id":%s,"attachments":%s,"sample_blob":%s,"files":{%s}}\n' \
-  "$ID" "$TS" "$TAG" "${#RECIPIENTS[@]}" "$([ "$NO_STORAGE" -eq 0 ] && echo true || echo false)" "${CONV_COUNT:-0}" "${CONV_MAX:-0}" "${ATT_COUNT:-0}" "$sample_json" "$files_json" \
+printf '{"client_id":"%s","timestamp":"%s","chatwoot_tag":"%s","encrypted":true,"recipients":%s,"storage_included":%s,"conversations":%s,"latest_conversation_id":%s,"attachments":%s,"schema_version":"%s","migrations_count":%s,"sample_blob":%s,"files":{%s}}\n' \
+  "$ID" "$TS" "$TAG" "${#RECIPIENTS[@]}" "$([ "$NO_STORAGE" -eq 0 ] && echo true || echo false)" "${CONV_COUNT:-0}" "${CONV_MAX:-0}" "${ATT_COUNT:-0}" "${SCHEMA_VERSION:-0}" "${MIGRATIONS_COUNT:-0}" "$sample_json" "$files_json" \
   >"$PARTIAL/manifest.json"
 
 mv "$PARTIAL" "$DEST"
