@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 5 - Safe upgrades (done, verified locally)
-- **Current task:** `/start-phase` for Phase 6 (Channel runbooks & checkers) when the owner says go
+- **Current phase:** Phase 6 - Channel runbooks & checkers (planned)
+- **Current task:** Phase 6 plan written (`docs/tasks/phase-6.md`); waiting for owner approval of its 7 open questions, then start 6.1
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -39,7 +39,7 @@
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
-| 6 | Channel runbooks & checkers | Not started | — |
+| 6 | Channel runbooks & checkers | Planned (task file ready, awaiting owner approval) | — |
 | 7 | Industry starter packs bn + en | Not started | — |
 | 8 | aibot | Not started | — |
 | 9 | Monthly care report | Not started | — |
