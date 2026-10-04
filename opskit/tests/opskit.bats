@@ -148,3 +148,11 @@ setup() {
   [ "$status" -eq 1 ]
   [[ "$output" == *"brand.mode"* ]]
 }
+
+@test "dev-setup --help and bad options" {
+  run "$BATS_TEST_DIRNAME/../bin/dev-setup" --help
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"--check"* ]]
+  run "$BATS_TEST_DIRNAME/../bin/dev-setup" --bogus
+  [ "$status" -eq 2 ]
+}

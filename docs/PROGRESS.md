@@ -5,6 +5,31 @@
 - **Current task:** `/start-phase` for Phase 6 (Channel runbooks & checkers) when the owner says go
 - **Last updated:** 2026-10-04
 
+## How we work with the owner (read this first in a new chat)
+- The owner is non-technical / semi-technical: explain in plain words, define any technical term, give numbered "do this" steps for anything the owner must do, say what can be skipped and what you will handle yourself. Never ask the owner to type commands unless unavoidable; then give the exact text and what it does.
+- Rhythm per phase: write `docs/tasks/phase-N.md` with open questions in plain words and **bold defaults**, wait for the owner ("all defaults ok" or changes), then build task by task, run `opskit/bin/check`, write the verification report here, commit + push to branch `claude/wizardly-babbage-ui2rpa`, then summarize in plain words and ask about the next phase. Report honestly what is NOT verified.
+- Binding owner decisions so far: BYOK OpenAI-compatible LLM (ADR-011); whole backup encrypted to owner key + host key (ADR-015); Telegram-only alerts, no hub (ADR-016); GitHub Actions stays OFF (ADR-013); white-label = owner decision pending, default Chatwoot branding (docs/ADDONS.md); the 8 add-ons in docs/ADDONS.md are V2 (after the first client is live); live upgrades only in the client's off-hours window by default (configurable per client).
+- Never edit Chatwoot's own files (0 files differ from v4.18.0; enforced by a test); never touch `enterprise/`.
+
+## Owner to-do list (none of it blocks the next phases; collect results on the owner's own device)
+1. Create the offline backup key on the owner's device (`age-keygen -o owner.key`), keep `owner.key` offline, send/commit only the public `age1...` line to `opskit/keys/owner.age.pub`. Real backups refuse to run without it.
+2. Create the Telegram alert bot (@BotFather) and run `opskit alerts set-telegram <id>` on the server; optionally a free heartbeat check (healthchecks.io / UptimeRobot) in `OPSKIT_HEARTBEAT_URL` so a dead server is noticed.
+3. White-label decision (default: keep Chatwoot branding) and, before a paying client, ask Chatwoot / a lawyer about the "Powered by" footer.
+4. Channel tests that need the owner's accounts: Telegram inbox, email (IMAP/SMTP), WhatsApp Cloud API test number, Facebook/Instagram, mobile app; Bengali UI check. Real LLM key/endpoint for the bot (Phase 8).
+5. A real VPS + domain for Phase 11.
+
+## Lessons for the agent (hard-won; avoid repeating)
+- Always quote heredocs (`<<'EOF'`) when the text contains backticks or `$`; an unquoted one executed commands once.
+- `docker compose exec` inside a `while read` loop swallows the loop's stdin: add `</dev/null`.
+- Unit tests with fake docker/psql hide real bugs (a text-column `coalesce` bug): run the real stack before calling something done.
+- Do not use `pkill -f` patterns that can match your own command line; kill by exact PID.
+- Cloud sandbox: the Docker daemon is not started automatically (`opskit/bin/dev-setup` does it); behind the proxy use `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt`; Docker Hub rate limits (HTTP 429) are common: use `OPSKIT_AIBOT_IMAGE=opskit-aibot:test` (built earlier) or retry; a restarted sandbox keeps the disk but not running containers.
+- The API header must be `api-access-token` (with dashes) through Caddy.
+- Long runs (> 8 min) must go in the background with a log file and polling; the tool time limit is 10 minutes.
+
+## Machine setup (new session / new machine)
+`opskit/bin/dev-setup` installs/starts everything needed (system tools, Python libs, uv + Python 3.12, aibot deps, Docker daemon) and ends with `opskit/bin/opskit doctor`. Then `opskit/bin/check --quick` (1 min) or `opskit/bin/check` (about 13 min, includes both selftests).
+
 ## Phases
 | Phase | Name | Status | Verified |
 |---|---|---|---|

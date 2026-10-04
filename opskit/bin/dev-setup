@@ -1,0 +1,85 @@
+#!/usr/bin/env bash
+# Prepare a machine (Claude cloud session, WSL2 Ubuntu, plain Linux) to work on opskit + aibot. Idempotent.
+# Usage: dev-setup [--check]     --check only reports what is missing and changes nothing.
+set -euo pipefail
+
+CHECK=0
+case "${1:-}" in
+  --check) CHECK=1 ;;
+  -h | --help) sed -n '2,4p' "$0"; exit 0 ;;
+  "") ;;
+  *) echo "unknown option: $1" >&2; exit 2 ;;
+esac
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SUDO=""
+[ "$(id -u)" -eq 0 ] || SUDO="sudo"
+export PATH="$HOME/.local/bin:$PATH"
+missing=0
+
+say() { printf '[dev-setup] %s\n' "$*"; }
+act() { # run a change, or just announce it in --check mode
+  if [ "$CHECK" -eq 1 ]; then say "would run: $*"; else "$@"; fi
+}
+
+# 1. system tools (command -> apt package)
+declare -A PKG=([shellcheck]=shellcheck [bats]=bats [envsubst]=gettext-base [jq]=jq [age]=age [rclone]=rclone [yq]=yq [curl]=curl [openssl]=openssl [git]=git)
+to_install=()
+for cmd in "${!PKG[@]}"; do
+  if command -v "$cmd" >/dev/null 2>&1; then say "ok      $cmd"; else say "MISSING $cmd"; to_install+=("${PKG[$cmd]}"); missing=1; fi
+done
+if [ "${#to_install[@]}" -gt 0 ]; then
+  act $SUDO apt-get update -qq
+  act $SUDO env DEBIAN_FRONTEND=noninteractive apt-get install -y -qq "${to_install[@]}"
+fi
+
+# 2. python libraries used by the schema checker
+if python3 -c 'import jsonschema, yaml, referencing' >/dev/null 2>&1; then
+  say "ok      python: jsonschema, pyyaml, referencing"
+else
+  say "MISSING python libraries (jsonschema, pyyaml, referencing)"
+  missing=1
+  if [ "$CHECK" -eq 0 ]; then
+    python3 -m pip install --quiet jsonschema pyyaml referencing 2>/dev/null \
+      || python3 -m pip install --quiet --break-system-packages jsonschema pyyaml referencing
+  else say "would run: pip install jsonschema pyyaml referencing"; fi
+fi
+
+# 3. uv + Python 3.12 + aibot dependencies
+if command -v uv >/dev/null 2>&1; then
+  say "ok      uv"
+else
+  say "MISSING uv (https://docs.astral.sh/uv/)"
+  missing=1
+  if [ "$CHECK" -eq 0 ]; then curl -LsSf https://astral.sh/uv/install.sh | sh; export PATH="$HOME/.local/bin:$PATH"; else say "would install uv"; fi
+fi
+if command -v uv >/dev/null 2>&1; then
+  if uv python find 3.12 >/dev/null 2>&1; then say "ok      python 3.12"; else say "MISSING python 3.12"; missing=1; act uv python install 3.12; fi
+  if [ "$CHECK" -eq 0 ]; then (cd "$ROOT/aibot" && uv sync --quiet --python 3.12) && say "ok      aibot dependencies"; fi
+fi
+
+# 4. docker (cloud sessions have no service manager: start the daemon by hand)
+if docker info >/dev/null 2>&1; then
+  say "ok      docker daemon running"
+elif ! command -v docker >/dev/null 2>&1; then
+  say "MISSING docker (install Docker Desktop with WSL integration, or docker.io)"
+  missing=1
+elif [ "$CHECK" -eq 1 ]; then
+  say "docker daemon is NOT running (would try to start it)"
+  missing=1
+elif command -v dockerd >/dev/null 2>&1 && [ "$(id -u)" -eq 0 ]; then
+  say "starting dockerd (cloud/WSL without a service manager)"
+  pkill containerd 2>/dev/null || true
+  rm -f /var/run/docker.pid
+  (setsid nohup dockerd >/tmp/dockerd.log 2>&1 </dev/null &)
+  for _ in $(seq 1 30); do docker info >/dev/null 2>&1 && break; sleep 1; done
+  if docker info >/dev/null 2>&1; then say "ok      docker daemon running"; else say "docker did not start: see /tmp/dockerd.log"; missing=1; fi
+else
+  say "docker daemon is not running: start Docker Desktop (Windows) or 'sudo service docker start'"
+  missing=1
+fi
+
+# 5. final report
+if [ "$CHECK" -eq 0 ]; then "$ROOT/opskit/bin/opskit" doctor || missing=1; fi
+if [ "$missing" -eq 0 ]; then say "all good"; else say "some items need attention (see above)"; fi
+[ "$CHECK" -eq 1 ] || [ "$missing" -eq 0 ]
