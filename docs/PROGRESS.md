@@ -83,7 +83,7 @@
 | No message text in logs | PASS | pytest with a marker in every path incl. failures; selftest greps the bot log for customer words, key and token |
 | Webhook auth, retries | PASS | wrong secret 404, bad/old signature 401, duplicates dropped by message id, ignored events (outgoing, template, private, open chats, other inbox/account) |
 | Kill switch | PASS | `bot disable`: detached, waiting chats opened, new chats open with no bot; `bot enable` is idempotent |
-| Tests | PASS | aibot: 124 pytest (ruff, mypy --strict clean); opskit: 218 bats |
+| Tests | PASS | aibot: 107 pytest (ruff, mypy --strict clean); opskit: 218 bats |
 Bugs found and fixed during the phase (several only by running live): bot settings file unreadable by the container user; container not recreated after settings changed (a replaced file is a new mount); empty-field handling; the full check's last bats suite still had a Phase 1 placeholder test for `llm`.
 Findings: Chatwoot's bot token cannot list teams or messages (team id is looked up by `bot enable`, turns counted by the bot itself); the agent-bot list shows token and secret to admins (re-enable reuses them). See EXPLORATION_REPORT 5d, ADR-017, A-036..A-045.
 Security review: key only in `llm.env`/`aibot.env` (mode 600), never in `client.yaml`, `bot.yaml`, output, logs or errors (tests); webhook secret never on a command line; uvicorn access log off (it would print the secret path); phone numbers/emails masked before the AI call; no inbound port for the bot; upstream-path test still clean.
