@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/pack_hours.schema.json",
+  "title": "Pack opening hours (day 0 = Sunday)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "industry",
+    "days"
+  ],
+  "properties": {
+    "industry": {
+      "enum": [
+        "generic",
+        "fcommerce",
+        "clinic",
+        "travel",
+        "education",
+        "service"
+      ]
+    },
+    "days": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "day"
+        ],
+        "properties": {
+          "day": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 6
+          },
+          "closed": {
+            "type": "boolean"
+          },
+          "open": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          },
+          "close": {
+            "type": "string",
+            "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+          }
+        }
+      }
+    }
+  }
+}

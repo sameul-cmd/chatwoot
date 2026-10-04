@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/pack_meta.schema.json",
+  "title": "Industry pack description (pack.yaml)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "industry",
+    "version",
+    "description"
+  ],
+  "properties": {
+    "industry": {
+      "enum": [
+        "generic",
+        "fcommerce",
+        "clinic",
+        "travel",
+        "education",
+        "service"
+      ]
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

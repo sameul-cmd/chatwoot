@@ -58,11 +58,17 @@ def main(argv: list[str]) -> int:
     except (OSError, yaml.YAMLError) as exc:
         print(f"{file}: (root): cannot read document: {exc}")
         return 1
-    validator = Draft202012Validator(json.loads(schema_path.read_text()), registry=_registry())
-    errors = sorted(validator.iter_errors(data), key=lambda e: list(map(str, e.absolute_path)))
-    for e in errors:
-        print(f"{file}: {_path(e)}: {_message(e)}")
+    errors = problems(name, data)
+    for path, message in errors:
+        print(f"{file}: {path}: {message}")
     return 1 if errors else 0
+
+
+def problems(name: str, data) -> list[tuple[str, str]]:
+    """Return (field path, message) for every way `data` breaks the schema `name`."""
+    validator = Draft202012Validator(json.loads((SCHEMA_DIR / f"{name}.schema.json").read_text()), registry=_registry())
+    errors = sorted(validator.iter_errors(data), key=lambda e: list(map(str, e.absolute_path)))
+    return [(_path(e), _message(e)) for e in errors]
 
 
 if __name__ == "__main__":

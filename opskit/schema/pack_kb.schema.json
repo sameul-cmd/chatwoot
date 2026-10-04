@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/pack_kb.schema.json",
+  "title": "Bot starter questions (answers are filled in by the client)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "industry",
+    "items"
+  ],
+  "properties": {
+    "industry": {
+      "enum": [
+        "generic",
+        "fcommerce",
+        "clinic",
+        "travel",
+        "education",
+        "service"
+      ]
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "question"
+        ],
+        "properties": {
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$",
+            "maxLength": 40
+          },
+          "question": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bn",
+              "en"
+            ],
+            "properties": {
+              "bn": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1500
+              },
+              "en": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1500
+              }
+            }
+          },
+          "answer": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "bn": {
+                "type": "string"
+              },
+              "en": {
+                "type": "string"
+              }
+            }
+          },
+          "review_required": {
+            "type": "boolean",
+            "default": true,
+            "description": "Bangla text stays true until the owner (native speaker) approves it."
+          }
+        }
+      }
+    }
+  }
+}

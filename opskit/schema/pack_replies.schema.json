@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://opskit.local/schema/pack_replies.schema.json",
+  "title": "Pack greeting, after-hours message and CSAT switch",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "industry",
+    "greeting",
+    "out_of_office"
+  ],
+  "properties": {
+    "industry": {
+      "enum": [
+        "generic",
+        "fcommerce",
+        "clinic",
+        "travel",
+        "education",
+        "service"
+      ]
+    },
+    "greeting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bn",
+        "en"
+      ],
+      "properties": {
+        "bn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "review_required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Bangla text stays true until the owner (native speaker) approves it."
+        }
+      }
+    },
+    "out_of_office": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bn",
+        "en"
+      ],
+      "properties": {
+        "bn": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1500
+        },
+        "review_required": {
+          "type": "boolean",
+          "default": true,
+          "description": "Bangla text stays true until the owner (native speaker) approves it."
+        }
+      }
+    },
+    "csat": {
+      "type": "boolean",
+      "default": true
+    }
+  }
+}
