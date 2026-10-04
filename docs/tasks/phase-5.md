@@ -23,44 +23,44 @@ A single command that moves a client from one Chatwoot version to another **safe
 
 ## Tasks
 
-### [ ] 5.1 — Settings and history format
+### [x] 5.1 — Settings and history format
 - **Goal:** `client.yaml`: `upgrade_window {start,end}` (default 01:00-05:00) and typed `support`; `clients/<id>/upgrade/history.jsonl` (one JSON line per attempt: from, to, started, finished, result, backup used, rollback done?, migrations count). No message text.
 - **Tests:** bats: schema field errors; history lines valid JSON
 
-### [ ] 5.2 — Release information (`opskit upgrade <id> --to <tag> --info`)
+### [x] 5.2 — Release information (`opskit upgrade <id> --to <tag> --info`)
 - **Goal:** from local git tags: number of changes, new/changed database migrations, `.env.example` keys added/removed, compose diff, plus the checklist; clear hint to fetch missing tags (`git fetch upstream tag <tag>`).
 - **Tests:** bats on a tiny fixture git repo (known diffs); hostile tag names rejected
 
-### [ ] 5.3 — Checklist runbook (`docs/runbooks/upgrade-checklist.md`)
+### [x] 5.3 — Checklist runbook (`docs/runbooks/upgrade-checklist.md`)
 - **Goal:** plain-language before/during/after list (read release notes, client informed, backup fresh, window, who is on call, rollback plan, what to tell the client).
 
-### [ ] 5.4 — Preflight checks
+### [x] 5.4 — Preflight checks
 - **Goal:** target is a CE tag (`-ce`), newer than the current one, image exists in the registry, current stack healthy, a backup < 24 h old exists or is made now, enough disk (2x the backup size), inside the off-hours window (for production), staging rehearsal passed < 24 h ago (for production).
 - **Tests:** bats with fake docker/registry: every refusal has a clear message
 
-### [ ] 5.5 — Staging rehearsal on the new image
+### [x] 5.5 — Staging rehearsal on the new image
 - **Goal:** `opskit upgrade <id> --to <tag> --stage`: latest backup -> `<id>-staging` running the NEW image -> `db:chatwoot_prepare` (time + migrations applied are recorded) -> smoke tests -> result file `upgrade/staging-<tag>.json` -> staging deleted.
 - **Needs approval:** touches upgrade/restore logic
 
-### [ ] 5.6 — Smoke test suite (`lib/smoke.sh`)
+### [x] 5.6 — Smoke test suite (`lib/smoke.sh`)
 - **Goal:** one suite used for staging and production: login, health route, widget script, websocket, background job + email, **widget message round trip** (customer message through an API inbox creates a conversation), conversation count and newest id unchanged since the backup, newest attachment checksum, bot health, bot reply (skipped until Phase 8). `OPSKIT_UPGRADE_FAIL_SMOKE=staging|production` injects a failure for tests.
 - **Tests:** bats for result formatting and failure injection; live in 5.10
 
-### [ ] 5.7 — Production upgrade (`opskit upgrade <id> --to <tag> --apply --yes`)
+### [x] 5.7 — Production upgrade (`opskit upgrade <id> --to <tag> --apply --yes`)
 - **Goal:** typed client id + `--yes`; window check; fresh backup; record schema version; set the new tag in `client.yaml`; render; pull; `db:chatwoot_prepare`; start; wait healthy; smoke tests; history line; Telegram message (started / succeeded / rolled back).
 - **Needs approval:** touches a live client's inbox (uses the safety rules: backup -> staging -> smoke -> promote -> rollback)
 
-### [ ] 5.8 — Automatic rollback
+### [x] 5.8 — Automatic rollback
 - **Goal:** on any failure after the pre-upgrade backup: stop services, put the old tag back; if migrations changed the database restore it from the pre-upgrade backup (and uploads), start, run smoke tests on the old version, verify conversation count/newest id/attachment equal the backup, alert you critically. If rollback itself fails: stop, critical alert with exact manual steps (never loop).
 - **Tests:** bats (decision logic: image-only vs database restore); live in 5.10
 
-### [ ] 5.9 — Fork sync rehearsal
+### [x] 5.9 — Fork sync rehearsal
 - **Goal:** `opskit/bin/sync-rehearsal <old-tag> <new-tag>`: in a throw-away git worktree build "old tag + our kit", merge the new tag, report conflicts in our paths (should be none) and run the paths check; never touches the real branch; deletes the worktree. Proves `docs/UPSTREAM_SYNC.md` works before the first real sync.
 - **Tests:** bats on a fixture repo; live run for v4.17.1 -> v4.18.0
 
-### [ ] 5.10 — Selftest v4 (acceptance)
+### [x] 5.10 — Selftest v4 (acceptance)
 - **Goal:** selftest scenario B: deploy on v4.17.1-ce, seed a conversation + photo, upgrade to v4.18.0-ce (staging + production smoke pass, data intact, tag changed, history written); scenario C: same with an injected production smoke failure -> automatic rollback to v4.17.1 with the data intact.
 - **Acceptance:** both scenarios pass in `opskit selftest`
 
-### [ ] 5.11 — Docs, verification
+### [x] 5.11 — Docs, verification
 - **Goal:** `docs/runbooks/upgrade.md` (plain language), update PROGRESS/ASSUMPTIONS/ENVIRONMENT, `/verify-phase`, security review (no secrets in history/alerts, window enforcement, no accidental production overwrite).

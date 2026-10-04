@@ -40,5 +40,10 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | `OPSKIT_STATE_NOW`, `OPSKIT_NOW` | tests/selftest | fake clocks: decision clock only / all clocks |
 | `OPSKIT_AIBOT_IMAGE` | operator shell | use an existing image for the bot instead of building (offline / rate-limited / Phase 10) |
 
+| `OPSKIT_UPGRADE_FAIL_SMOKE=staging|production|rollback` | tests | injects a failing smoke row to prove the rollback |
+| `OPSKIT_ENFORCE_WINDOW=1` | tests | enforce the off-hours window even on local practice stacks |
+| `OPSKIT_STAGING_TAG` | set by the upgrade code | image tag for the staging copy (rehearsal) |
+| `OPSKIT_SELFTEST_FROM`, `OPSKIT_SELFTEST_TO` | operator shell | releases used by `opskit selftest upgrade` (default v4.17.1-ce -> v4.18.0-ce) |
+
 ## 4. Rules
 Never commit `.env`, keys, `opskit/clients/`, `opskit/hosts/`, dumps, KBs of real clients, bot audit DBs. Rotate any leaked key. Free-tier LLM only with demo data.
