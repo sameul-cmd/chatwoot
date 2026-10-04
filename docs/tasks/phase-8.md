@@ -81,7 +81,7 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Goal:** on the demo stack with the fake AI server reachable from the aibot container: `bot enable`, a visitor asks a KB question in Bangla and in English and gets the cited answer with the disclosure on the first message; "মানুষ চাই" and "talk to a human", an off-topic question, a complaint, and the fourth message all hand off (status open, label `ai-handoff`, team if set); AI down (fake stopped) hands off with reason `llm_error`; `bot disable` stops it; no message text in the aibot logs; client mode refuses to start without the paid flag. Add these rows to `opskit selftest`.
 - **Acceptance:** all rows as expected in `opskit selftest`.
 
-### [ ] 8.11 — Docs, verification, security review (written after 8.12 so the real-model result is in the report)
+### [x] 8.11 — Docs, verification, security review (written after 8.12 so the real-model result is in the report)
 - **Goal:** `docs/runbooks/bot.md` (enable, KB filling, BYOK setup, going live gate, switching off), ADR for the bot design, ASSUMPTIONS, ENVIRONMENT, PROGRESS report; security review (key only in env files mode 600, never in logs/repr/errors; webhook auth; masked PII; SQLite on the host only; no inbound ports; the bot cannot be tricked into other topics by the prompt tests); upstream-path test still 0 files.
 - **Acceptance:** `opskit/bin/check` passes; report written.
 

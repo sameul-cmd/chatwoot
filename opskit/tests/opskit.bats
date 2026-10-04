@@ -34,9 +34,12 @@ setup() {
   [[ "$output" == *"MISSING"* ]]
 }
 
-@test "llm is a placeholder until Phase 8" {
-  run "$OPSKIT" llm models demo
-  [ "$status" -eq 3 ]
+@test "llm commands need an existing client and a known subcommand" {
+  run "$OPSKIT" llm models nobody-here
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"client not found"* ]]
+  run "$OPSKIT" llm
+  [ "$status" -eq 2 ]
 }
 
 @test "valid client.yaml passes" {

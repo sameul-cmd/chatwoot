@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 7 - Industry starter packs (in progress; Phase 6 done and verified)
-- **Current task:** Phase 8 planned and answered (`docs/tasks/phase-8.md`); start at 8.1 when the owner says go
+- **Current phase:** Phase 8 - aibot (built and verified with the pretend AI; real-AI check 8.12 pending the owner's key)
+- **Current task:** Phase 8 tasks 8.1-8.11 done; 8.12 (real-model check) waits for the owner's key in a new session. Then plan Phase 9
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -41,7 +41,7 @@
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
 | 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
 | 7 | Industry starter packs bn + en | Done locally (Bangla NOT yet proofread by the owner; real clients NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. 6 pack selftest rows, 2026-10-04 |
-| 8 | aibot | Planned and approved with owner changes (hybrid search, AI mood check, real-key check 8.12); not started | — |
+| 8 | aibot | Done with a pretend AI (real-model quality, real clients NOT VERIFIED; task 8.12 pending the owner's key) | `opskit/bin/check` passes except one stale test fixed after (218 bats pass), selftest incl. 10 bot rows, 2026-10-04 |
 | 9 | Monthly care report | Not started | — |
 | 10 | Own CE images incl. arm64 | Not started | — |
 | 11 | Field readiness | Not started | — |
@@ -72,6 +72,24 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 8 verification (2026-10-04, cloud sandbox, scripted fake AI)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Bot answers a KB question in Bangla and English (and Banglish) | PASS | live demo + selftest row: answers from the KB, in the customer's language, chat stays with the bot |
+| First message discloses automation, never claims to be human | PASS | selftest row; pytest checks every fixed message |
+| Hands off on "মানুষ চাই" / "talk to a human", off-topic, complaint, after 3 bot replies, AI down | PASS | selftest rows: chat opened, label `ai-handoff`, team set, private note with the reason only |
+| `aibot eval` on the demo test set meets the gate | PASS with the fake AI (24 questions: 22 correct, 0 wrong price/policy, 92%) | selftest row. **Real-model score NOT VERIFIED** (needs the owner's key, task 8.12) |
+| Client mode refuses to start without the paid-tier statement | PASS | pytest + selftest row (container run in client mode) |
+| No message text in logs | PASS | pytest with a marker in every path incl. failures; selftest greps the bot log for customer words, key and token |
+| Webhook auth, retries | PASS | wrong secret 404, bad/old signature 401, duplicates dropped by message id, ignored events (outgoing, template, private, open chats, other inbox/account) |
+| Kill switch | PASS | `bot disable`: detached, waiting chats opened, new chats open with no bot; `bot enable` is idempotent |
+| Tests | PASS | aibot: 124 pytest (ruff, mypy --strict clean); opskit: 218 bats |
+Bugs found and fixed during the phase (several only by running live): bot settings file unreadable by the container user; container not recreated after settings changed (a replaced file is a new mount); empty-field handling; the full check's last bats suite still had a Phase 1 placeholder test for `llm`.
+Findings: Chatwoot's bot token cannot list teams or messages (team id is looked up by `bot enable`, turns counted by the bot itself); the agent-bot list shows token and secret to admins (re-enable reuses them). See EXPLORATION_REPORT 5d, ADR-017, A-036..A-045.
+Security review: key only in `llm.env`/`aibot.env` (mode 600), never in `client.yaml`, `bot.yaml`, output, logs or errors (tests); webhook secret never on a command line; uvicorn access log off (it would print the secret path); phone numbers/emails masked before the AI call; no inbound port for the bot; upstream-path test still clean.
+NOT VERIFIED: any real AI model (answer quality, `max` effort handling on a real service, real embeddings), real WhatsApp/Facebook chats, the Bangla fixed messages (draft, owner to approve), load, team assignment when the team has no agents, backup/restore carrying `bot.env` (documented: run `bot enable` again).
+Owner to-do: add the AI key as an environment secret and start a new session for task 8.12 (see the runbook and my last message); proofread the bot's Bangla messages; write the client's real KB and test questions.
+
 ### Phase 7 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|
