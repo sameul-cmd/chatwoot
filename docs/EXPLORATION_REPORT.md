@@ -62,6 +62,7 @@ Mostly yes. Answers to *(verify)* items so far:
 - Handoff: bot token `POST /conversations/:id/toggle_status {"status":"open"}` -> status open, bot assignee cleared; label via `POST /conversations/:id/labels`. Team assignment call not yet tested.
 - Payload sample: `docs/captures/agent-bot-message_created.json`.
 **Mismatch found:** SPEC 13.1 private-network webhook (see section 5) - needs `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true`. Not a blocker; ADR-012.
+- **Branding is data, not code:** branding configs are locked in the CE UI, env vars do not override them on an initialised DB, but a DB-row update works and survives `db:chatwoot_prepare` (tested, then restored). See `docs/ADDONS.md`.
 - **BYOK for built-in AI assist:** the OpenAI integration only asks for an `api_key` in the UI, but the code reads an installation setting `CAPTAIN_OPEN_AI_ENDPOINT` (lib/integrations/llm_base_service.rb) so a custom OpenAI-compatible endpoint may be possible without patching (not tested). Our bot does not depend on it.
 Still open: the other *(verify)* items (sidekiq health method, channel health fields, Reports API, enterprise-free image proof) belong to later steps.
 

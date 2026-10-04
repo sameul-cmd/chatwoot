@@ -34,6 +34,9 @@
 ## Phase 0 - owner-side items (do on your own device later)
 - Telegram, email (IMAP/SMTP), WhatsApp Cloud API test number, Facebook/Instagram, mobile app via ngrok, Bengali UI check.
 
+## Open owner decisions
+- White-label (Option 3, default off) and which add-ons to build: see `docs/ADDONS.md`. Nothing is built for these yet.
+
 ## Known issues
 <!-- Bugs or gaps found outside current task scope. -->
 
