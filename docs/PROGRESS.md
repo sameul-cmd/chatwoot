@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 4 - Monitoring & alerts (done, verified locally)
-- **Current task:** `/start-phase` for Phase 5 (Safe upgrades) when the owner says go
+- **Current phase:** Phase 5 - Safe upgrades (planned)
+- **Current task:** Phase 5 plan written (`docs/tasks/phase-5.md`); waiting for owner approval of its 7 open questions (upgrade/rollback logic on live inboxes), then start 5.1
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -13,7 +13,7 @@
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
-| 5 | Safe upgrades | Not started | — |
+| 5 | Safe upgrades | Planned (task file ready, awaiting owner approval) | — |
 | 6 | Channel runbooks & checkers | Not started | — |
 | 7 | Industry starter packs bn + en | Not started | — |
 | 8 | aibot | Not started | — |
