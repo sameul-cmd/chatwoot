@@ -26,7 +26,15 @@ build_aibot_image() {
     args+=(--network host --secret "id=cabundle,src=${OPSKIT_BUILD_CA}")
     [ -n "${HTTPS_PROXY:-}" ] && args+=(--build-arg "HTTPS_PROXY=${HTTPS_PROXY}" --build-arg "HTTP_PROXY=${HTTPS_PROXY}")
   fi
-  docker build -q "${args[@]}" -t "opskit-aibot:${id}" "$OPSKIT_REPO_ROOT/aibot" >/dev/null || die "aibot image build failed"
+  # registries rate-limit (HTTP 429) now and then: retry a few times before giving up
+  local attempt=1 delay=15
+  until docker build -q "${args[@]}" -t "opskit-aibot:${id}" "$OPSKIT_REPO_ROOT/aibot" >/dev/null 2>&1; do
+    [ "$attempt" -lt 4 ] || die "aibot image build failed after ${attempt} attempts"
+    log_warn "aibot image build failed (attempt ${attempt}); retrying in ${delay}s"
+    sleep "$delay"
+    attempt=$((attempt + 1))
+    delay=$((delay * 2))
+  done
 }
 
 wait_healthy() {

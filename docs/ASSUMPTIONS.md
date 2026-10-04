@@ -13,3 +13,7 @@ Decisions the agent made where `docs/SPEC.md` was silent or ambiguous. The owner
 | A-007 | 2026-10-04 | 2.3 | SPEC 7.3 | Empty SMTP login variables are omitted from `.env` because Chatwoot attempts SMTP login when `SMTP_USERNAME` is set but empty (verified). | approved (default) |
 | A-008 | 2026-10-04 | 2.4 | SPEC 7.4 | Generated Super Admin password = random hex + `-Aa1!` to satisfy Chatwoot's complexity rules (upper, lower, digit, special; verified). | approved (default) |
 | A-009 | 2026-10-04 | 2.1 | SPEC 15 | The aibot image is built on the target machine by `deploy` (`opskit-aibot:<id>`) until Phase 10 publishes images to GHCR. `OPSKIT_BUILD_CA` adds a CA bundle for restricted networks. | pending |
+| A-010 | 2026-10-04 | 3.6 | SPEC 8 | `restore --target new-host` is deferred to Phase 11 (a new host is a remote deploy); only `--target staging` is built. | pending |
+| A-011 | 2026-10-04 | 3.7 | SPEC 8 | The automated restore test uses the live `secrets.env` already on the host (no private key available to automation); the escrow is proven separately with `--identity` (manual, e.g. quarterly). | pending |
+| A-012 | 2026-10-04 | 3.3 | SPEC 8 | Backup manifest records conversation count, newest conversation id and the newest attachment's checksum (counts/ids/checksums only, no message text) so the restore test can compare. | approved (default) |
+| A-013 | 2026-10-04 | 3.10 | CLAUDE.md API rule | API calls through the public URL send the header as `api-access-token` (the underscore form is dropped by Caddy; verified). | approved |

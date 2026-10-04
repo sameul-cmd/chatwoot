@@ -1,0 +1,3 @@
+# opskit nightly backup for ${CLIENT_ID} (installed to /etc/cron.d/opskit-backup-${CLIENT_ID} on a real host in Phase 11)
+CRON_TZ=${TIMEZONE}
+${BACKUP_SCHEDULE} root flock -n /var/lock/opskit-backup-${CLIENT_ID}.lock ${OPSKIT_BIN} backup run ${CLIENT_ID} >>/var/log/opskit-backup-${CLIENT_ID}.log 2>&1

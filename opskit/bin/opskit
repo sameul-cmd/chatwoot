@@ -18,6 +18,18 @@ export OPSKIT_ROOT
 . "$OPSKIT_ROOT/lib/deploy.sh"
 # shellcheck source=../lib/ssh.sh
 . "$OPSKIT_ROOT/lib/ssh.sh"
+# shellcheck source=../lib/crypto.sh
+. "$OPSKIT_ROOT/lib/crypto.sh"
+# shellcheck source=../lib/alert.sh
+. "$OPSKIT_ROOT/lib/alert.sh"
+# shellcheck source=../lib/prune.sh
+. "$OPSKIT_ROOT/lib/prune.sh"
+# shellcheck source=../lib/backup.sh
+. "$OPSKIT_ROOT/lib/backup.sh"
+# shellcheck source=../lib/restore.sh
+. "$OPSKIT_ROOT/lib/restore.sh"
+# shellcheck source=../lib/chatwoot_api.sh
+. "$OPSKIT_ROOT/lib/chatwoot_api.sh"
 # shellcheck source=../lib/checks.sh
 . "$OPSKIT_ROOT/lib/checks.sh"
 
@@ -34,6 +46,9 @@ Commands:
   client check <id>           post-deploy checks (PASS/FAIL table)
   client pause|resume <id>    stop / start the stack
   client offboard <id> --yes  DESTRUCTIVE: delete containers + volumes (needs typed client id)
+  backup run|list <id>        back up (db + uploads + encrypted secrets), prune, copy off-server / list backups
+  backup verify <id> [--identity key] [--keep]   restore the latest backup into a throw-away staging stack and check it
+  restore <id> --from <ts|latest> --target staging [--identity key] [--overwrite --yes]   restore into a fresh staging stack
   host bootstrap <host> [--user U] [--dry-run]   prepare a fresh Ubuntu host (Docker, ufw, swap, updates)
   bot validate <file>         validate a bot.yaml against the schema
   pack validate <file>        validate a pack item file against the schema
@@ -145,19 +160,48 @@ cmd_host_bootstrap() {
   fi
 }
 
-# selftest: deploy a throwaway local client, run the post-deploy checks, always tear it down.
+# _selftest_row NAME STATUS DETAIL
+_selftest_row() { printf '%-34s %-5s %s\n' "$1" "$2" "$3"; }
+
+# selftest: deploy a throwaway local client, run the post-deploy checks, then backup -> restore test -> overwrite
+# protection on seeded data (conversation + image attachment). Always tears everything down.
 cmd_selftest() {
-  local tmp rc=0 id="selftest"
+  local tmp rc=0 id="selftest" key out detail sid
   require_tool docker "install Docker" || return 1
+  require_tool age-keygen "apt install age" || return 1
   tmp="$(mktemp -d)"
   export OPSKIT_CLIENTS_DIR="$tmp"
+  export OPSKIT_ALERT_DIR="$tmp/alerts"
+  sid="${id}-staging"
+  key="$tmp/selftest-owner.key"
+  age-keygen -o "$key" >/dev/null 2>&1
+  export OPSKIT_AGE_RECIPIENT
+  OPSKIT_AGE_RECIPIENT="$(age-keygen -y "$key")"
   # shellcheck disable=SC2064  # expand $tmp/$id now on purpose
-  trap "OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  trap "teardown_staging $sid >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
   cmd_client_new "$id" --domain chat.selftest.localhost --name "Selftest" --local --http-port 18080 --https-port 18443 || return 1
   deploy_client "$id" || rc=1
   if [ "$rc" -eq 0 ]; then
     post_deploy_checks "$id" || rc=1
     ensure_admin "$id" >/dev/null 2>&1 || rc=1
+  fi
+  if [ "$rc" -eq 0 ]; then
+    if cw_use_stack "$id" && detail="$(cw_seed_demo 2>&1)"; then _selftest_row "seed conversation + attachment" PASS "$detail"; else _selftest_row "seed conversation + attachment" FAIL "${detail:-no output}"; rc=1; fi
+  fi
+  if [ "$rc" -eq 0 ]; then
+    if backup_run "$id" >/dev/null 2>&1 && [ -n "$(latest_backup "$id")" ]; then _selftest_row "backup (db + uploads + escrow)" PASS "$(basename "$(latest_backup "$id")")"; else _selftest_row "backup (db + uploads + escrow)" FAIL "see: opskit backup run $id"; rc=1; fi
+  fi
+  if [ "$rc" -eq 0 ]; then
+    if out="$(backup_verify "$id" --identity "$key" --keep 2>&1)"; then _selftest_row "restore test (login/conv/attachment)" PASS "$(printf '%s' "$out" | tail -n1 | cut -c1-110)"; else _selftest_row "restore test (login/conv/attachment)" FAIL "$(printf '%s' "$out" | tail -n1 | cut -c1-110)"; rc=1; fi
+  fi
+  if [ "$rc" -eq 0 ]; then
+    if restore_client "$id" --from latest --target staging >/dev/null 2>&1; then
+      _selftest_row "overwrite protection" FAIL "an existing staging stack was overwritten without --overwrite --yes"; rc=1
+    elif OPSKIT_CONFIRM_ID=wrong restore_client "$id" --from latest --target staging --overwrite --yes >/dev/null 2>&1; then
+      _selftest_row "overwrite protection" FAIL "a wrong typed id was accepted"; rc=1
+    else
+      _selftest_row "overwrite protection" PASS "refused without flags and with a wrong typed id"
+    fi
   fi
   if [ "$rc" -eq 0 ]; then echo "SELFTEST PASSED"; else echo "SELFTEST FAILED"; fi
   return "$rc"
@@ -197,6 +241,30 @@ main() {
           else
             cmd_client_lifecycle "$sub" "$@"
           fi
+          ;;
+        *)
+          usage >&2
+          exit 2
+          ;;
+      esac
+      ;;
+    restore)
+      local rid="${1:-}"
+      valid_client_id "$rid" || { log_error "usage: opskit restore <id> --from <ts|latest> --target staging"; exit 2; }
+      [ -d "$(client_dir "$rid")" ] || die "client not found: $rid"
+      shift
+      restore_client "$rid" "$@"
+      ;;
+    backup)
+      local bsub="${1:-}" bid="${2:-}"
+      valid_client_id "$bid" || { log_error "usage: opskit backup run|list <id>"; exit 2; }
+      [ -d "$(client_dir "$bid")" ] || die "client not found: $bid"
+      case "$bsub" in
+        run) backup_run "$bid" ;;
+        list) backup_list "$bid" ;;
+        verify)
+          shift 2
+          backup_verify "$bid" "$@"
           ;;
         *)
           usage >&2

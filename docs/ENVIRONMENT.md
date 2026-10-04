@@ -30,5 +30,10 @@ GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test
 | `OPSKIT_CONFIRM_ID` | tests/automation only | typed-id answer for destructive commands |
 | `OPSKIT_HEALTH_TIMEOUT` | optional | seconds to wait for rails (default 300) |
 
+| `OPSKIT_AGE_RECIPIENT` / `OPSKIT_KEYS_DIR` | operator shell | owner's PUBLIC age key (or folder holding `owner.age.pub`); private key never in the repo |
+| `OPSKIT_BACKUP_AGENT`, `OPSKIT_ALERT_DIR`, `OPSKIT_NOW` | tests | override the backup script / alert folder / "now" for retention tests |
+| `OPSKIT_HUB_URL`, `OPSKIT_HUB_TOKEN` | host | optional ops-hub endpoint for alerts and heartbeats (Phase 4 defines the hub side) |
+| `CW_BASE_URL`, `CW_TOKEN`, `CW_RESOLVE`, `CW_INSECURE` | set by `cw_use_stack` | API helper settings; the token is never printed |
+
 ## 4. Rules
 Never commit `.env`, keys, `opskit/clients/`, `opskit/hosts/`, dumps, KBs of real clients, bot audit DBs. Rotate any leaked key. Free-tier LLM only with demo data.

@@ -6,3 +6,8 @@ hosts/
 *.sql.gz
 *.tar.gz
 logs/
+alerts/
+backups/
+keys/*.key
+keys/*.txt
+*.key

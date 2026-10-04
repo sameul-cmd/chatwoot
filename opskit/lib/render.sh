@@ -117,6 +117,11 @@ AIBOT_LLM_TIER_PAID=true"
     render_template "$OPSKIT_ROOT/templates/aibot.env.tmpl" "$stack/aibot.env.tmp" \
       CLIENT_ID AIBOT_WEBHOOK_SECRET AIBOT_LLM_LINES
     render_template "$OPSKIT_ROOT/templates/Caddyfile.tmpl" "$stack/Caddyfile" CLIENT_ID CADDY_SITE CADDY_TLS
+    export TIMEZONE BACKUP_SCHEDULE OPSKIT_BIN
+    TIMEZONE="$(_y '.timezone' "$cfg")"
+    BACKUP_SCHEDULE="$(_y '.backup.schedule // "0 2 * * *"' "$cfg")"
+    OPSKIT_BIN="$OPSKIT_ROOT/bin/opskit"
+    render_template "$OPSKIT_ROOT/templates/backup.cron.tmpl" "$dir/backup.cron" CLIENT_ID TIMEZONE BACKUP_SCHEDULE OPSKIT_BIN
     chmod 600 "$stack/.env.tmp" "$stack/aibot.env.tmp"
     mv -f "$stack/.env.tmp" "$stack/.env"
     mv -f "$stack/aibot.env.tmp" "$stack/aibot.env"

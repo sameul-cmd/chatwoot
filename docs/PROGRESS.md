@@ -1,8 +1,8 @@
 # Progress
 
 ## Current status
-- **Current phase:** Phase 3 - Backups & restore (planned)
-- **Current task:** Phase 3 plan written (`docs/tasks/phase-3.md`); waiting for owner approval of its 7 open questions (backup/restore logic + secrets), then start 3.1
+- **Current phase:** Phase 3 - Backups & restore (done, verified locally)
+- **Current task:** owner decision pending on encrypting the WHOLE backup (see Open owner decisions), then `/start-phase` for Phase 4 (Monitoring & alerts)
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -11,7 +11,7 @@
 | 0 | Fork, set up & explore Chatwoot | Done on cloud sandbox; owner-account tests (Telegram, email, WhatsApp, Meta) and Bengali UI check pending on owner device | cloud-verified 2026-10-04 |
 | 1 | Opskit foundation | Done (verified locally; GitHub CI intentionally not enabled) | local `opskit/bin/check` passes (18 bats, 17 pytest, shellcheck) |
 | 2 | Client deployment kit | Done locally (real host / real SMTP / real HTTPS NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest, 2026-10-04 |
-| 3 | Backups & restore | Planned (task file ready, awaiting owner approval) | — |
+| 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts via shared ops-hub | Not started | — |
 | 5 | Safe upgrades | Not started | — |
 | 6 | Channel runbooks & checkers | Not started | — |
@@ -23,6 +23,7 @@
 
 ## Task log
 <!-- Newest first. For each task: date, task, files changed, how to verify manually, notes. -->
+- 2026-10-04 Phase 3 (3.1-3.11): `opskit/{lib/{crypto,alert,prune,backup,restore,chatwoot_api}.sh, agent/backup.sh, templates/backup.cron.tmpl}`, schema `backup`, commands `backup run|list|verify`, `restore`, selftest v2, bats `backup_lib/backup_agent/backup_run`, `docs/runbooks/restore.md`. Verify: `OPSKIT_BUILD_CA=... opskit/bin/check` -> ALL CHECKS PASSED incl. SELFTEST PASSED (backup + restore test + overwrite protection rows).
 - 2026-10-04 Phase 2 (2.1-2.11): `aibot/Dockerfile`, `opskit/templates/*`, `opskit/lib/{secrets,render,deploy,checks,ssh}.sh`, `opskit/agent/bootstrap.sh`, `opskit/bin/opskit` (client new/render/deploy/check/pause/resume/offboard, host bootstrap, selftest), bats `render.bats` + `host.bats`, `docs/runbooks/deploy.md`. Verify: `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt opskit/bin/check` (sandbox) or `opskit/bin/check` (normal machine) -> ALL CHECKS PASSED incl. SELFTEST PASSED; manual: runbook `docs/runbooks/deploy.md`.
 - 2026-10-04 Phase 1 (1.1-1.10): `opskit/{bin,lib,schema,tests}`, `aibot/{pyproject.toml,src/aibot,tests}`, `.github/workflows/opskit-ci.yml`, `docs/HANDOVER.md`. Verify: `opskit/bin/check --quick` -> ALL CHECKS PASSED; `opskit/bin/opskit doctor`; `opskit/bin/opskit client validate opskit/tests/fixtures/client_shared.yaml` -> "V2" message. Not verified: the CI workflow itself (needs enabling on GitHub).
 
@@ -36,12 +37,28 @@
 - Telegram, email (IMAP/SMTP), WhatsApp Cloud API test number, Facebook/Instagram, mobile app via ngrok, Bengali UI check.
 
 ## Open owner decisions
+- **Backup encryption scope (found in Phase 3):** today only the secrets escrow is encrypted; `db.dump` and `storage.tar.gz` are plain, so conversations (and channel tokens, which Chatwoot stores in plaintext unless its encryption keys are set) travel unencrypted to the off-server storage. Recommended: encrypt the whole backup to two keys (owner key offline + a per-host key so the automated monthly test can still read it) OR configure the off-server remote as an rclone `crypt` remote. Not changed yet because the approved design encrypted the escrow only.
 - White-label (Option 3, default off) and which add-ons to build: see `docs/ADDONS.md`. Nothing is built for these yet.
 
 ## Known issues
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Phase 3 verification (2026-10-04, cloud sandbox)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Restore of a demo client with conversations and an image attachment into a new stack shows both | PASS | live: seeded 1 conversation + PNG; `backup verify` and selftest: conversations pass (count + newest id equal manifest), attachment pass (MD5 + size match), login pass; ~65 s |
+| `.env` escrow decrypts | PASS | `--identity`: "decrypts-and-matches-live"; bats round trip, wrong key fails without output |
+| Pruning exact (fixture) | PASS | bats: exact keep/delete set at the 14-day boundary, newest never deleted, `.partial`/junk ignored, on-disk prune; remote prune exact |
+| Overwrite protection works | PASS | live: existing staging refused; `--overwrite` without `--yes` refused; wrong typed id refused (stack untouched); production untouched; correct id replaces staging |
+| Failed backup raises an alert payload | PASS | bats: failing agent, unusable remote, missing key each write a critical alert JSON (<=300-char summary, no secrets) and exit non-zero |
+| Off-server copy | PASS (local-folder remote) | rclone copy + size check + remote prune; real storage NOT VERIFIED |
+| Backup integrity | PASS | zero-size/unreadable dump aborts and leaves no complete folder; lock refuses concurrent runs |
+Findings recorded: SECRET_KEY_BASE experiment, plaintext channel secrets in the dump, `api-access-token` header through Caddy (EXPLORATION_REPORT). Bugs fixed: image build now retries on registry 429; password no longer passed on a command line.
+NOT VERIFIED: real off-server storage (B2/R2/...), cron on a real host (Debian cron `CRON_TZ` support), restore onto another host (deferred, A-010), large data sizes, restore across Chatwoot versions.
+Open decision: encrypt the whole backup (see Open owner decisions).
+Test totals: 73 bats tests, 19 pytest, shellcheck clean.
+
 ### Phase 2 verification (2026-10-04, cloud sandbox)
 | Criterion | Result | Evidence |
 |---|---|---|

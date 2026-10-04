@@ -182,3 +182,19 @@ new_local() { "$OPSKIT" client new demo --domain chat.demo.localhost --name "Dem
   grep -q '^SMTP_USERNAME=apikey$' "$OPSKIT_CLIENTS_DIR/shop/stack/.env"
   grep -q '^SMTP_AUTHENTICATION=plain$' "$OPSKIT_CLIENTS_DIR/shop/stack/.env"
 }
+
+@test "render writes a nightly backup cron line in the client's time zone" {
+  new_local
+  "$OPSKIT" client render demo
+  f="$OPSKIT_CLIENTS_DIR/demo/backup.cron"
+  grep -q '^CRON_TZ=Asia/Dhaka$' "$f"
+  grep -qE '^0 2 \* \* \* root flock -n /var/lock/opskit-backup-demo.lock .*/bin/opskit backup run demo ' "$f"
+  ! grep -q '\${' "$f"
+}
+
+@test "a custom backup schedule is used in the cron line" {
+  new_local
+  printf 'backup:\n  schedule: "30 3 * * *"\n' >>"$OPSKIT_CLIENTS_DIR/demo/client.yaml"
+  "$OPSKIT" client render demo
+  grep -qE '^30 3 \* \* \* root flock' "$OPSKIT_CLIENTS_DIR/demo/backup.cron"
+}
