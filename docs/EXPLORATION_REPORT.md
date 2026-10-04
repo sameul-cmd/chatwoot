@@ -5,27 +5,58 @@
 ## 1. Setup
 | Item | Value |
 |---|---|
-| Repo + commit/version explored | |
-| How it was installed/cloned | |
-| Machine (CPU/RAM/GPU/OS) | |
-| Free path used (keys, free tiers, local models) | |
-| Setup time + problems hit (and fixes) | |
+| Repo + commit/version explored | chatwoot v4.18.0 (tag SHA 9f920b549); image `chatwoot/chatwoot:v4.18.0-ce` |
+| How it was installed/cloned | Upstream `docker-compose.production.yaml` with image changed to the `-ce` tag; `.env` from `.env.example`; `db:chatwoot_prepare` via one-off container; Super Admin + account created with `rails runner` (stack in git-ignored `explore/stack/`) |
+| Machine (CPU/RAM/GPU/OS) | Cloud sandbox: 4 vCPU, 15 GB RAM, Linux, Docker 29.6 (NOT the owner's 12 GB WSL laptop) |
+| Free path used (keys, free tiers, local models) | None needed |
+| Setup time + problems hit (and fixes) | ~5 min. Docker daemon had to be started by hand (sandbox). Agent-bot webhook to a private address was blocked until `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true` (see section 5/6) |
 
 ## 2. Feature walkthrough
 | Feature | Tried with (sample data) | Result (works / partly / broken) | Notes, screenshots/log paths |
 |---|---|---|---|
+| Production compose + CE image | official compose, `-ce` tag | works | `v4.18.0-ce` tag exists. Compose also starts a pointless `base` container (it is the YAML anchor, harmless). Health route: `GET /api` -> `{"version","queue_services","data_services"}` |
+| Super Admin / account creation | `rails runner` | works | Account, SuperAdmin user, AccountUser(administrator); user has `access_token` for the Application API |
+| Application API | token header `api_access_token` | works | create inbox, agent bot, set_agent_bot, conversations, messages, labels, toggle_status |
+| Website widget inbox | API create | partly | Inbox created; the widget uses `/api/v1/widget` + JWT, not the public API. Browser round trip not yet tested |
+| API-channel inbox + public API | `/public/api/v1/inboxes/<inbox_identifier>/contacts/...` | works | used for scripted customer messages |
+| Agent Bot (webhook) | listener `explore/listener.py` | works | see `docs/captures/agent-bot-message_created.json` and section 6 |
+| Bot reply | `POST /api/v1/accounts/1/conversations/:id/messages` with the bot's `access_token`, `message_type: outgoing` | works | 200 |
+| Handoff | `POST .../conversations/:id/toggle_status {"status":"open"}` with bot token | works | status pending -> open, bot assignee cleared; emits conversation_status_changed / conversation_opened |
+| Label via bot token | `POST .../conversations/:id/labels {"labels":["ai-handoff"]}` | works | 200 |
+| Attachments (image) | 70-byte PNG via public API multipart | works | stored in `storage_data`, opens after restore |
+| Backup -> restore into fresh stack | `pg_dump -Fc` + tar of storage volume; restore into project `cwrest` on port 3001 | works | 52 conversations on both; login OK; attachment byte-identical |
+| Telegram, email (IMAP/SMTP), WhatsApp Cloud API, Facebook/Instagram | - | NOT TESTED | needs owner accounts; to be done on the owner's device |
+| Other UI features (macros, automations, teams, help center, campaigns, reports, CSAT, Bengali UI), Super Admin console, mobile app | - | NOT YET TESTED | browser tour pending |
 
 ## 3. Performance on this machine
 | Task | Input size | Time | Notes |
 |---|---|---|---|
+| Idle, 4 containers | fresh stack | - | rails 406 MB, sidekiq 476 MB, postgres 124 MB, redis 5 MB (~1.0 GB total) |
+| 50 conversations via public API | 50 contacts+conversations+messages | 9.6 s | rails 408 MB, sidekiq 563 MB, postgres 133 MB (~1.1 GB); all 50 bot webhooks delivered |
+| pg_dump + storage tar | 52 conversations, 1 attachment | seconds | db.dump 384 KB |
+| Restore into fresh stack | same | ~1.5 min incl. boot | verified |
 
 ## 4. Output quality
-What looked client-ready, what didn't, with examples.
+Not applicable yet (no UI review done); bot answer quality is Phase 8.
 
 ## 5. Limits & risks found
-Licenses, paid dependencies, data/privacy, stability, update pace.
+- **SSRF guard blocks the planned bot wiring.** Chatwoot refuses webhook URLs whose host has no public IP ("Hostname ... has no public ip addresses"), so `http://aibot:8000/...` fails by default. Supported fix: env `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true` (found in `lib/safe_fetch.rb`; no upstream code change). Risk: it relaxes the same guard for avatar/media fetching on that install. Mitigation: only on dedicated client stacks, no untrusted users can set outgoing URLs (Super Admin/admin only). Recorded as ADR-012.
+- When the bot is unreachable Chatwoot flips a pending conversation to open (unless `keep_pending_on_bot_failure` is set), so a bot outage degrades to "human handles it" - good fail-safe.
+- Webhook has retry behaviour for HTTP 429/500 from the bot (`RETRYABLE_AGENT_BOT_STATUSES`); aibot should return 200 quickly and process asynchronously.
+- Ports 5432/6379/3000 are published on 127.0.0.1 in the official compose; our rendered compose must drop 5432/6379.
 
 ## 6. Matches the SPEC? (agent's view)
-Does the app behave as the SPEC assumes? List any mismatches that affect later phases; if none, say "no blockers — continuing".
+Mostly yes. Answers to *(verify)* items so far:
+- CE image tag format: `chatwoot/chatwoot:v4.18.0-ce` exists.
+- Health route: `GET /api`.
+- Agent bot registration: Application API `POST /api/v1/accounts/:id/agent_bots` {name, outgoing_url} -> returns `access_token` (bot API token) and `secret` (webhook HMAC). Attach: `POST /inboxes/:id/set_agent_bot {"agent_bot":<id>}`.
+- Webhook headers: `X-Chatwoot-Delivery`, `X-Chatwoot-Timestamp`, `X-Chatwoot-Signature: sha256=HMAC_SHA256(secret, "<ts>.<raw body>")`. aibot should verify it in addition to the secret path token.
+- Events delivered to the bot: `message_created` (incoming AND the bot's own outgoing echo), `conversation_updated`, `conversation_opened`, `conversation_status_changed`. aibot must act only on `message_created` with `message_type == "incoming"`, `private == false`, and `conversation.status == "pending"`.
+- New conversation on a bot inbox starts `pending` with assignee type AgentBot (confirmed).
+- Reply: bot token, `POST /conversations/:id/messages`, `message_type: outgoing` -> 200.
+- Handoff: bot token `POST /conversations/:id/toggle_status {"status":"open"}` -> status open, bot assignee cleared; label via `POST /conversations/:id/labels`. Team assignment call not yet tested.
+- Payload sample: `docs/captures/agent-bot-message_created.json`.
+**Mismatch found:** SPEC 13.1 private-network webhook (see section 5) - needs `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true`. Not a blocker; ADR-012.
+Still open: the other *(verify)* items (sidekiq health method, channel health fields, Reports API, enterprise-free image proof) belong to later steps.
 
 ## 7. Questions for the owner (only if blocked or unclear)

@@ -8,7 +8,7 @@
 ## Phases
 | Phase | Name | Status | Verified |
 |---|---|---|---|
-| 0 | Fork, set up & explore Chatwoot | Not started | — |
+| 0 | Fork, set up & explore Chatwoot | In progress (core done: install, API, agent-bot capture, backup/restore, RAM) | — |
 | 1 | Opskit foundation | Not started | — |
 | 2 | Client deployment kit | Not started | — |
 | 3 | Backups & restore | Not started | — |
@@ -28,6 +28,10 @@
 - Repo = upstream `chatwoot/chatwoot` at v4.18.0 + our kit. Developed with Claude Code in a cloud session; branch `claude/wizardly-babbage-ui2rpa`.
 - Agent rules: `.claude/CLAUDE.md` (force-added; upstream .gitignore ignores `.claude/`). Skills: `.claude/skills/`.
 - Anything needing the owner's accounts (Telegram, WhatsApp, email, VPS) is coded here and proven later on the owner's device; see `docs/HANDOVER.md` (created as we go).
+
+## Phase 0 remaining
+- Browser tour (widget round trip, Super Admin console, macros/automations/teams/help center/reports, Bengali UI) - can be done here with a headless browser.
+- Owner-side later: Telegram, email, WhatsApp, Facebook/Instagram, mobile app.
 
 ## Known issues
 <!-- Bugs or gaps found outside current task scope. -->

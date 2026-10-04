@@ -1,0 +1,145 @@
+{
+ "headers": {
+  "Content-Type": "application/json",
+  "X-Chatwoot-Delivery": "608d79cf-48ae-4d9c-82bf-bf03158ec691",
+  "X-Chatwoot-Timestamp": "1791104419",
+  "X-Chatwoot-Signature": "<redacted>"
+ },
+ "body": {
+  "account": {
+   "id": 1,
+   "name": "Demo Store"
+  },
+  "additional_attributes": {},
+  "content_attributes": {},
+  "content_type": "text",
+  "content": "Load message 50",
+  "conversation": {
+   "additional_attributes": {},
+   "can_reply": true,
+   "channel": "Channel::Api",
+   "contact_inbox": {
+    "id": 52,
+    "contact_id": 52,
+    "inbox_id": 2,
+    "source_id": "<uuid>",
+    "created_at": "2026-10-04T09:00:19.734Z",
+    "updated_at": "2026-10-04T09:00:19.734Z",
+    "hmac_verified": false,
+    "pubsub_token": "<redacted>"
+   },
+   "id": 52,
+   "inbox_id": 2,
+   "messages": [
+    {
+     "id": 57,
+     "content": "Load message 50",
+     "account_id": 1,
+     "inbox_id": 2,
+     "conversation_id": 52,
+     "message_type": 0,
+     "created_at": 1791104419,
+     "updated_at": "2026-10-04T09:00:19.836Z",
+     "private": false,
+     "status": "sent",
+     "source_id": null,
+     "content_type": "text",
+     "content_attributes": {},
+     "sender_type": "Contact",
+     "sender_id": 52,
+     "external_source_ids": {},
+     "additional_attributes": {},
+     "processed_message_content": "Load message 50",
+     "sentiment": {},
+     "conversation": {
+      "assignee_id": null,
+      "unread_count": 1,
+      "last_activity_at": 1791104419,
+      "contact_inbox": {
+       "source_id": "<uuid>"
+      }
+     },
+     "sender": {
+      "additional_attributes": {},
+      "custom_attributes": {},
+      "email": null,
+      "id": 52,
+      "identifier": null,
+      "name": "Load Customer 50",
+      "phone_number": null,
+      "thumbnail": "",
+      "blocked": false,
+      "type": "contact"
+     }
+    }
+   ],
+   "labels": [],
+   "meta": {
+    "sender": {
+     "additional_attributes": {},
+     "custom_attributes": {},
+     "email": null,
+     "id": 52,
+     "identifier": null,
+     "name": "Load Customer 50",
+     "phone_number": null,
+     "thumbnail": "",
+     "blocked": false,
+     "type": "contact"
+    },
+    "assignee": {
+     "id": 1,
+     "name": "explore-bot",
+     "avatar_url": "",
+     "type": "agent_bot"
+    },
+    "assignee_type": "AgentBot",
+    "team": null,
+    "hmac_verified": false
+   },
+   "status": "pending",
+   "custom_attributes": {},
+   "snoozed_until": null,
+   "unread_count": 1,
+   "first_reply_created_at": null,
+   "priority": null,
+   "waiting_since": 1791104419,
+   "agent_last_seen_at": 0,
+   "contact_last_seen_at": 0,
+   "last_activity_at": 1791104419,
+   "timestamp": 1791104419,
+   "created_at": 1791104419,
+   "updated_at": 1791104419.8400698,
+   "account": {
+    "id": 1,
+    "name": "Demo Store"
+   }
+  },
+  "created_at": "2026-10-04T09:00:19.836Z",
+  "id": 57,
+  "inbox": {
+   "id": 2,
+   "name": "API Test"
+  },
+  "message_type": "incoming",
+  "private": false,
+  "sender": {
+   "account": {
+    "id": 1,
+    "name": "Demo Store"
+   },
+   "additional_attributes": {},
+   "avatar": "",
+   "custom_attributes": {},
+   "email": null,
+   "id": 52,
+   "identifier": null,
+   "name": "Load Customer 50",
+   "phone_number": null,
+   "thumbnail": "",
+   "blocked": false
+  },
+  "source_id": null,
+  "event": "message_created"
+ }
+}

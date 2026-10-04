@@ -30,5 +30,8 @@
 ### ADR-011: BYOK OpenAI-compatible LLM adapter with model picker and effort control
 - **Status:** accepted (owner, 4 Oct 2026) — **Decision:** every LLM call in aibot (and any opskit LLM use) goes through one OpenAI-compatible adapter (`base_url`, `api_key_env`, `model`, `effort` none..max). Model picker = list `/models` from the endpoint and choose (CLI `opskit llm models`; later UI if V2 portal). **Consequences:** no provider SDK lock-in; "max" effort mapping is endpoint-specific (ASSUMPTIONS A-001); tests use the fake LLM only.
 
+### ADR-012: Allow private-network webhooks on client stacks
+- **Status:** accepted (Phase 0 finding) — **Decision:** client `.env` sets `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true` so Chatwoot can call `http://aibot:8000` inside the compose network; aibot also verifies `X-Chatwoot-Signature`. **Consequences:** weaker SSRF guard for that install; only dedicated stacks; revisit if shared multi-account mode (V2) is built.
+
 ### ADR-010: Two IDE packages share docs
 - **Status:** accepted — Kilo: `AGENTS.fork.md` + `kilo.jsonc` + `.kilo/`. Factory: `.factory/AGENTS.md` + `.factory/skills/`. Claude Code (this fork): `.claude/CLAUDE.md` + `.claude/skills/`.
