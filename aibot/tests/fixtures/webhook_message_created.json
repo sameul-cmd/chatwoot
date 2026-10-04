@@ -1,0 +1,154 @@
+{
+  "account": {
+    "id": 1,
+    "name": "Demo Shop"
+  },
+  "additional_attributes": {},
+  "content_attributes": {
+    "in_reply_to": null
+  },
+  "content_type": "text",
+  "content": "How long is delivery?",
+  "conversation": {
+    "additional_attributes": {
+      "browser_language": null,
+      "browser": {
+        "browser_name": "Unknown Browser",
+        "browser_version": "0.0",
+        "device_name": "Unknown",
+        "platform_name": "Unknown",
+        "platform_version": "0"
+      },
+      "initiated_at": {
+        "timestamp": "2026-01-01T00:00:00.000Z"
+      },
+      "referer": null
+    },
+    "can_reply": true,
+    "channel": "Channel::WebWidget",
+    "contact_inbox": {
+      "id": 1,
+      "contact_id": 1,
+      "inbox_id": 1,
+      "source_id": "dd4569d3-bd7a-4b8c-bdbb-ff92fa10d180",
+      "created_at": "2026-10-04T17:13:01.521Z",
+      "updated_at": "2026-10-04T17:13:01.521Z",
+      "hmac_verified": false,
+      "pubsub_token": "SvGcrSNtByjqwrnC67BrLofY"
+    },
+    "id": 1,
+    "inbox_id": 1,
+    "messages": [
+      {
+        "id": 1,
+        "content": "How long is delivery?",
+        "account_id": 1,
+        "inbox_id": 1,
+        "conversation_id": 1,
+        "message_type": 0,
+        "created_at": 1791133981,
+        "updated_at": "2026-10-04T17:13:01.672Z",
+        "private": false,
+        "status": "sent",
+        "source_id": null,
+        "content_type": "text",
+        "content_attributes": {
+          "in_reply_to": null
+        },
+        "sender_type": "Contact",
+        "sender_id": 1,
+        "external_source_ids": {},
+        "additional_attributes": {},
+        "processed_message_content": "How long is delivery?",
+        "sentiment": {},
+        "conversation": {
+          "assignee_id": null,
+          "unread_count": 1,
+          "last_activity_at": 1791133981,
+          "contact_inbox": {
+            "source_id": "dd4569d3-bd7a-4b8c-bdbb-ff92fa10d180"
+          }
+        },
+        "sender": {
+          "additional_attributes": {},
+          "custom_attributes": {},
+          "email": null,
+          "id": 1,
+          "identifier": null,
+          "name": "silent-surf-338",
+          "phone_number": null,
+          "thumbnail": "",
+          "blocked": false,
+          "type": "contact"
+        }
+      }
+    ],
+    "labels": [],
+    "meta": {
+      "sender": {
+        "additional_attributes": {},
+        "custom_attributes": {},
+        "email": null,
+        "id": 1,
+        "identifier": null,
+        "name": "silent-surf-338",
+        "phone_number": null,
+        "thumbnail": "",
+        "blocked": false,
+        "type": "contact"
+      },
+      "assignee": {
+        "id": 1,
+        "name": "Demo bot",
+        "avatar_url": "",
+        "type": "agent_bot"
+      },
+      "assignee_type": "AgentBot",
+      "team": null,
+      "hmac_verified": false
+    },
+    "status": "pending",
+    "custom_attributes": {},
+    "snoozed_until": null,
+    "unread_count": 1,
+    "first_reply_created_at": null,
+    "priority": null,
+    "waiting_since": 1791133981,
+    "agent_last_seen_at": 0,
+    "contact_last_seen_at": 0,
+    "last_activity_at": 1791133981,
+    "timestamp": 1791133981,
+    "created_at": 1791133981,
+    "updated_at": 1791133981.6764987,
+    "account": {
+      "id": 1,
+      "name": "Demo Shop"
+    }
+  },
+  "created_at": "2026-10-04T17:13:01.672Z",
+  "id": 1,
+  "inbox": {
+    "id": 1,
+    "name": "Bot widget"
+  },
+  "message_type": "incoming",
+  "private": false,
+  "sender": {
+    "account": {
+      "id": 1,
+      "name": "Demo Shop"
+    },
+    "additional_attributes": {},
+    "avatar": "",
+    "custom_attributes": {},
+    "email": null,
+    "id": 1,
+    "identifier": null,
+    "name": "silent-surf-338",
+    "phone_number": null,
+    "thumbnail": "",
+    "blocked": false
+  },
+  "source_id": null,
+  "event": "message_created"
+}

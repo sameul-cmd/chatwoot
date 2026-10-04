@@ -66,6 +66,14 @@ Not applicable yet (no UI review done); bot answer quality is Phase 8.
 - **Inbox settings** `PATCH /inboxes/:id` take `greeting_enabled`, `greeting_message`, `out_of_office_message`, `csat_survey_enabled`, `working_hours_enabled`, `timezone`, `working_hours[]`. Working hours listed for a new inbox: 7 rows, hours enabled = false (Sunday closed, Monday-Friday 9-17, Saturday closed). A PATCH with fewer than seven days changes only the days sent. A closed day can come back with hours 0/0 or null, so only `closed_all_day` counts. An unknown timezone returns 422 "Timezone is not included in the list"; `Asia/Dhaka` is accepted.
 - Real shapes are saved in `opskit/tests/fixtures/pack_live_shapes.json` (fictional data).
 
+## 5d. Bot findings (Phase 8, task 8.1, verified live on a demo stack, v4.18.0)
+- `POST /agent_bots {name, outgoing_url}` returns `id`, `access_token` (the bot's own token), `secret` (webhook signing), `outgoing_url`; `POST /inboxes/:id/set_agent_bot {"agent_bot": id}` attaches it, `{"agent_bot": null}` detaches. A conversation started on an inbox **without** a bot starts `open`; with the bot it starts `pending`.
+- A webhook to the docker bridge gateway address works with `SAFE_FETCH_ALLOW_PRIVATE_NETWORK=true`. Delivered headers: `X-Chatwoot-Delivery`, `X-Chatwoot-Timestamp`, `X-Chatwoot-Signature`. **The signature formula `sha256=HMAC_SHA256(secret, "<timestamp>.<raw body>")` matches.**
+- A visitor's first message produced three webhooks: `message_created` incoming (conversation `pending`) plus two `message_created` with `message_type: template` (the widget's own prompts). The bot must act only on `incoming`. Payload carries `account.id`, `inbox.id`, `conversation.id/status`, `sender`, `content`, `private`; sample in `aibot/tests/fixtures/webhook_message_created.json`.
+- **The bot token MAY**: post an outgoing reply, post a private note, add labels (`POST /conversations/:id/labels {"labels":[...]}`), assign a team (`POST /conversations/:id/assignments {"team_id": n}`), toggle status to `open` (result: status open, bot unassigned, team and labels kept).
+- **The bot token may NOT**: list teams (`GET /teams` -> "not authorized for bots") or list a conversation's messages. So the team id is looked up once with the admin token by `opskit bot enable` and given to the bot; the bot counts its own replies in its own database.
+- API header through Caddy must be `api-access-token` (dashes), again confirmed: the underscore form is dropped and gives "You need to sign in".
+
 ## 6. Matches the SPEC? (agent's view)
 Mostly yes. Answers to *(verify)* items so far:
 - CE image tag format: `chatwoot/chatwoot:v4.18.0-ce` exists.

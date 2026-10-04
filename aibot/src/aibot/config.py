@@ -49,6 +49,36 @@ class HandoffKeywords(BaseModel):
     bn: list[str] = Field(default_factory=lambda: ["মানুষ", "এজেন্ট"])
 
 
+class UpsetWords(BaseModel):
+    """Words that mean the customer is upset: hand off at once (the AI also flags mood, see policy.py)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    en: list[str] = Field(
+        default_factory=lambda: [
+            "complaint",
+            "cheat",
+            "fraud",
+            "scam",
+            "refund",
+            "terrible",
+            "worst",
+            "angry",
+            "useless",
+        ]
+    )
+    bn: list[str] = Field(default_factory=lambda: ["অভিযোগ", "প্রতারণা", "প্রতারক", "ফেরত", "বাজে", "জঘন্য", "রাগ"])
+
+
+class EmbeddingSettings(BaseModel):
+    """Optional embedding search on the same OpenAI-compatible service as the chat model."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    model: str = Field(min_length=1)
+    min_similarity: float = Field(default=0.35, ge=0, le=1)
+
+
 class BotConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -60,12 +90,22 @@ class BotConfig(BaseModel):
     max_bot_turns: int = Field(default=3, ge=1, le=20)
     audit_days: int = Field(default=30, ge=1, le=365)
     handoff_keywords: HandoffKeywords = Field(default_factory=HandoffKeywords)
+    upset_words: UpsetWords = Field(default_factory=UpsetWords)
+    business_name: str = "our business"
+    messages: dict[str, dict[str, str]] = Field(default_factory=dict)
+    messages_bn_approved: bool = False
+    embeddings: EmbeddingSettings | None = None
+    kb_dir: Path = Path("/kb")
+    data_dir: Path = Path("/data")
+    account_id: int = Field(default=1, ge=1)
+    handoff_team_id: int | None = Field(default=None, ge=1)
     llm: LLMSettings
     mode: Mode = "client"
     llm_tier_paid: bool = False
     chatwoot_url: str | None = None
     bot_token: SecretStr | None = None
     webhook_secret: SecretStr | None = None
+    hmac_secret: SecretStr | None = None
 
 
 _ENV_TO_LLM = {
@@ -103,6 +143,12 @@ def load_config(env: Mapping[str, str], yaml_path: Path | None = None) -> BotCon
         ("AIBOT_CHATWOOT_URL", "chatwoot_url"),
         ("AIBOT_BOT_TOKEN", "bot_token"),
         ("AIBOT_WEBHOOK_SECRET", "webhook_secret"),
+        ("AIBOT_CHATWOOT_HMAC_SECRET", "hmac_secret"),
+        ("AIBOT_KB_DIR", "kb_dir"),
+        ("AIBOT_DATA_DIR", "data_dir"),
+        ("AIBOT_ACCOUNT_ID", "account_id"),
+        ("AIBOT_HANDOFF_TEAM_ID", "handoff_team_id"),
+        ("AIBOT_BUSINESS_NAME", "business_name"),
     ):
         if env.get(env_name):
             data[field] = env[env_name]

@@ -41,27 +41,27 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 
 ## Tasks
 
-### [ ] 8.1 — Verify the open Chatwoot facts live
+### [x] 8.1 — Verify the open Chatwoot facts live
 - **Goal:** on a running demo: create the agent bot through the API, attach it to an inbox, receive a real webhook in a small listener, check the signature formula, send a reply and a handoff with the **bot** token, test label + team assignment (`GET /teams`, `POST .../assignments`), and what happens to a conversation when the bot is switched off mid-chat. Record in EXPLORATION_REPORT; save sample payloads as fixtures.
 - **Acceptance:** findings written; fixtures saved (fictional data only).
 
-### [ ] 8.2 — Pure logic: language, KB and retrieval
+### [x] 8.2 — Pure logic: language, KB and retrieval
 - **Goal:** `lang.py` (Bangla script / English / Banglish by script ratio and a small Banglish word list), `kb.py` (load `faq.yaml` + `*.md`, chunk, ignore empty answers, aliases), `retrieval.py` (BM25 over bn + en tokens; cosine similarity over cached vectors; reciprocal rank fusion that merges both and falls back to whichever one is available or finds something). No network, no new dependencies.
 - **Acceptance:** pytest: language cases (bn, en, mixed, Banglish, numbers only), retrieval picks the right entry for bn/en/Banglish questions and nothing for unrelated ones, empty answers ignored; with vectors missing the ranking equals BM25, with BM25 finding nothing the vector result is used, with both the fused order is stable.
 
-### [ ] 8.3 — Pure logic: policy and handoff rules
+### [x] 8.3 — Pure logic: policy and handoff rules
 - **Goal:** `policy.py`: human-request keywords, complaint words, off-topic (no snippet found), turn limit, confidence gate (`>= min_confidence` and at least one snippet used), and the **fact guard** (numbers, currency and delivery/return/price claims in an answer must appear in the snippets it used, otherwise hand off). `messages.py`: the bot's fixed messages (disclosure, handoff, off-topic) in bn/en with `review_required` flags and client overrides. Every handoff has a named reason.
 - **Acceptance:** pytest covers each handoff trigger separately (human request in bn and en, complaint, off-topic, turn limit, low confidence, no snippet used, invented price, LLM error), disclosure on the first bot message only, and "never claims to be human".
 
-### [ ] 8.4 — LLM adapter (BYOK) with a fake
+### [x] 8.4 — LLM adapter (BYOK) with a fake
 - **Goal:** `llm.py`: one OpenAI-compatible `/chat/completions` client plus `/embeddings` (optional `bot.embeddings.model`; vectors cached by content hash; failure = silent fallback to keyword ranking and a counter) (`base_url`, key from the env var named in `api_key_env`, model, effort sent as `reasoning_effort` or the configured name; `max` mapped down per endpoint if refused, never failing the reply, A-001); strict JSON reply `{answer, confidence, used_ids, handoff, upset}` (the AI mood flag, question 5) parsed from plain or fenced JSON; timeouts and one retry; phone/email masking (question 2); prompt files in `aibot/prompts/` (answer only from snippets; business topics only; Bangla/English; never claim to be human). A scripted **fake LLM server** in the tests.
 - **Acceptance:** pytest with the fake: embeddings success/failure/not configured, good JSON, fenced JSON, garbage, timeout, HTTP 400 on the effort field (falls back), no key in logs/repr, phone number masked in the outgoing request.
 
-### [ ] 8.5 — Chatwoot client and the webhook
+### [x] 8.5 — Chatwoot client and the webhook
 - **Goal:** `chatwoot.py` (send message, private note, labels, custom attributes, toggle status, assign team, list messages: all behind one class, as TECH_ARCHITECTURE section 7 asks), `app.py` `POST /webhook/<secret>`: check the secret path, the signature, account and inbox; ignore outgoing/bot/private/non-pending; **idempotent on the message id** (SQLite); answer 200 at once and work in a background task; `audit.py` (SQLite with a schema-version table; question, answer, used ids, confidence, handoff reason, kept `audit_days`); logs never contain message text. A fake Chatwoot for tests.
 - **Acceptance:** pytest: wrong secret/signature rejected, each ignored event type, a retried delivery answered once, no message text in captured logs (test), audit pruning.
 
-### [ ] 8.6 — Handlers package, reload, metrics, health
+### [x] 8.6 — Handlers package, reload, metrics, health
 - **Goal:** the webhook calls an ordered list of handlers (V1: the answer handler only, extension point for V2 add-ons); `POST /admin/reload` (internal network only) reloads the KB without restart; `/health` as today plus KB size; metrics counters (answered, handed off by reason, errors, latency) and the unanswered-questions list kept in the audit database for Phase 9; kill-switch awareness (`bot.enabled: false` answers 200 and does nothing).
 - **Acceptance:** pytest; metrics numbers match a scripted conversation set exactly.
 
