@@ -336,7 +336,7 @@ _selftest_channels() {
   im="$(jq -r .imap "$T/mail.ports")"
   sm="$(jq -r .smtp "$T/mail.ports")"
   # shellcheck disable=SC2064
-  trap "kill $p1 $p2 $p3 2>/dev/null; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  trap "kill $p1 $p2 $p3 2>/dev/null || true; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
   cw_use_stack "$id" || { _selftest_row "channels: setup" FAIL "no API token"; return 1; }
   cw_request POST /api/v1/accounts/1/inboxes -H 'Content-Type: application/json' -d '{"name":"ST widget","channel":{"type":"web_widget","website_url":"https://shop.example.com"}}' >/dev/null
   cw_request POST /api/v1/accounts/1/inboxes -H 'Content-Type: application/json' -d '{"name":"ST api","channel":{"type":"api"}}' >/dev/null
@@ -372,7 +372,7 @@ _selftest_monitoring() {
   python3 "$OPSKIT_ROOT/tests/fake_telegram.py" "$portf" "$log" &
   fakepid=$!
   # shellcheck disable=SC2064
-  trap "kill $fakepid 2>/dev/null; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
+  trap "kill $fakepid 2>/dev/null || true; teardown_staging ${id}-staging >/dev/null 2>&1 || true; OPSKIT_CONFIRM_ID=$id offboard_client $id yes >/dev/null 2>&1 || true; rm -rf '$tmp'" EXIT
   for _ in $(seq 1 50); do [ -s "$portf" ] && break; sleep 0.1; done
   port="$(cat "$portf")"
   export TELEGRAM_API_BASE="http://127.0.0.1:${port}"
