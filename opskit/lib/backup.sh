@@ -5,6 +5,20 @@
 
 OPSKIT_BACKUP_AGENT="${OPSKIT_BACKUP_AGENT:-$OPSKIT_ROOT/agent/backup.sh}"
 
+# ensure_host_key ID -> per-client age key kept ON the host (mode 600) so automated restore tests can read backups.
+# Backups are encrypted to BOTH this key and the owner's offline key; the off-server copy holds neither private key.
+ensure_host_key() {
+  local id="$1" key
+  key="$(client_dir "$id")/backup.key"
+  if [ ! -s "$key" ]; then
+    (umask 077 && age-keygen -o "$key" >/dev/null 2>&1) || { rm -f "$key"; log_error "could not create the host backup key"; return 1; }
+    log_info "created host backup key (stays on this host)"
+  fi
+  chmod 600 "$key"
+}
+
+host_recipient() { age-keygen -y "$(client_dir "$1")/backup.key"; }
+
 backup_dir_for() { # ID -> local backup root for this client
   local id="$1" d
   d="$(_cfg '.backup.local_dir // ""' "$id")"
@@ -50,6 +64,8 @@ backup_run() {
 
   rec="$(age_recipient)" || { emit_alert critical "$id" backup "no encryption key configured" >/dev/null; return 1; }
   [ "$(_cfg '.storage.type // "local"' "$id")" = "s3" ] && args+=(--no-storage)
+  ensure_host_key "$id" || { emit_alert critical "$id" backup "host backup key missing" >/dev/null; return 1; }
+  args+=(--recipient "$(host_recipient "$id")")
 
   dest="$("$OPSKIT_BACKUP_AGENT" --id "$id" --compose-file "$dir/stack/docker-compose.yml" --out "$out" --recipient "$rec" \
     --escrow-dir "$dir" --escrow-file secrets.env --escrow-file client.yaml --tag "$tag" "${args[@]}" | tail -n1)" || rc=$?

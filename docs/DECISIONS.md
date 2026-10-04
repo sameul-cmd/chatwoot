@@ -39,5 +39,8 @@
 ### ADR-014: V2 add-ons are reserved, not built
 - **Status:** accepted (owner, 2026-10-04) — **Decision:** the 8 selected add-ons are V2 (after first client live); V1 only keeps wiring (reserved `addons`/`brand` config, extension points in TECH_ARCHITECTURE section 7). **Consequences:** `enabled: true` is rejected until built; each V2 add-on gets its own phase/ADR when started.
 
+### ADR-015: Whole backup is encrypted (owner key + host key)
+- **Status:** accepted (owner chose option A, 2026-10-04) — **Decision:** `db.dump.age`, `storage.tar.gz.age` and `escrow.tar.age` are encrypted to two age recipients: the owner's public key (private key offline, disaster recovery) and a per-client host key `clients/<id>/backup.key` (mode 600, never copied off-server) so the automated monthly restore test can read backups. Only `manifest.json` (counts, ids, checksums) is plain. **Consequences:** an off-server copy is unreadable without a private key; losing BOTH keys makes backups unrecoverable; the plaintext dump exists briefly in the private `.partial` folder; disk needs room for one extra dump during a run.
+
 ### ADR-010: Two IDE packages share docs
 - **Status:** accepted — Kilo: `AGENTS.fork.md` + `kilo.jsonc` + `.kilo/`. Factory: `.factory/AGENTS.md` + `.factory/skills/`. Claude Code (this fork): `.claude/CLAUDE.md` + `.claude/skills/`.

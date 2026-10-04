@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 3 - Backups & restore (done, verified locally)
-- **Current task:** owner decision pending on encrypting the WHOLE backup (see Open owner decisions), then `/start-phase` for Phase 4 (Monitoring & alerts)
+- **Current task:** `/start-phase` for Phase 4 (Monitoring & alerts) when the owner says go
 - **Last updated:** 2026-10-04
 
 ## Phases
@@ -37,7 +37,7 @@
 - Telegram, email (IMAP/SMTP), WhatsApp Cloud API test number, Facebook/Instagram, mobile app via ngrok, Bengali UI check.
 
 ## Open owner decisions
-- **Backup encryption scope (found in Phase 3):** today only the secrets escrow is encrypted; `db.dump` and `storage.tar.gz` are plain, so conversations (and channel tokens, which Chatwoot stores in plaintext unless its encryption keys are set) travel unencrypted to the off-server storage. Recommended: encrypt the whole backup to two keys (owner key offline + a per-host key so the automated monthly test can still read it) OR configure the off-server remote as an rclone `crypt` remote. Not changed yet because the approved design encrypted the escrow only.
+- (resolved 2026-10-04) Backup encryption scope: owner chose A - whole backup encrypted to owner key + host key (ADR-015).
 - White-label (Option 3, default off) and which add-ons to build: see `docs/ADDONS.md`. Nothing is built for these yet.
 
 ## Known issues
@@ -56,7 +56,7 @@
 | Backup integrity | PASS | zero-size/unreadable dump aborts and leaves no complete folder; lock refuses concurrent runs |
 Findings recorded: SECRET_KEY_BASE experiment, plaintext channel secrets in the dump, `api-access-token` header through Caddy (EXPLORATION_REPORT). Bugs fixed: image build now retries on registry 429; password no longer passed on a command line.
 NOT VERIFIED: real off-server storage (B2/R2/...), cron on a real host (Debian cron `CRON_TZ` support), restore onto another host (deferred, A-010), large data sizes, restore across Chatwoot versions.
-Open decision: encrypt the whole backup (see Open owner decisions).
+Follow-up done: whole backup encrypted (ADR-015); selftest row "backup is encrypted (no plaintext)" PASS; restore reads with host key or owner key.
 Test totals: 73 bats tests, 19 pytest, shellcheck clean.
 
 ### Phase 2 verification (2026-10-04, cloud sandbox)

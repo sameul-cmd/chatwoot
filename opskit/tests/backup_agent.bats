@@ -5,6 +5,9 @@ setup() {
   KEY="$BATS_TEST_TMPDIR/owner.key"
   age-keygen -o "$KEY" 2>/dev/null
   REC="$(age-keygen -y "$KEY")"
+  HOSTKEY="$BATS_TEST_TMPDIR/host.key"
+  age-keygen -o "$HOSTKEY" 2>/dev/null
+  HREC="$(age-keygen -y "$HOSTKEY")"
   ESC="$BATS_TEST_TMPDIR/esc"
   mkdir -p "$ESC" "$BATS_TEST_TMPDIR/fakebin" "$BATS_TEST_TMPDIR/storage/ab" "$BATS_TEST_TMPDIR/out"
   printf 'SECRET_KEY_BASE=topsecret123\n' >"$ESC/secrets.env"
@@ -31,21 +34,22 @@ EOS
 
 run_backup() {
   "$AGENT" --id demo --compose-file "$BATS_TEST_TMPDIR/compose.yml" --out "$BATS_TEST_TMPDIR/out" \
-    --recipient "$REC" --escrow-dir "$ESC" --escrow-file secrets.env --escrow-file client.yaml --tag v4.18.0-ce "$@"
+    --recipient "$REC" --recipient "$HREC" --escrow-dir "$ESC" --escrow-file secrets.env --escrow-file client.yaml --tag v4.18.0-ce "$@"
 }
 
 @test "successful backup creates the full layout with a manifest" {
   run run_backup
   [ "$status" -eq 0 ]
   dest="$(printf '%s\n' "$output" | tail -n1)"
-  [ -s "$dest/db.dump" ]
-  [ -s "$dest/storage.tar.gz" ]
+  [ -s "$dest/db.dump.age" ]
+  [ -s "$dest/storage.tar.gz.age" ]
   [ -s "$dest/escrow.tar.age" ]
   [ "$(jq -r .conversations "$dest/manifest.json")" = "7" ]
   [ "$(jq -r .latest_conversation_id "$dest/manifest.json")" = "42" ]
   [ "$(jq -r .sample_blob.key "$dest/manifest.json")" = "ab12" ]
   [ "$(jq -r .chatwoot_tag "$dest/manifest.json")" = "v4.18.0-ce" ]
-  [ "$(jq -r '.files["db.dump"].bytes' "$dest/manifest.json")" -gt 0 ]
+  [ "$(jq -r '.files["db.dump.age"].bytes' "$dest/manifest.json")" -gt 0 ]
+  [ "$(jq -r .recipients "$dest/manifest.json")" = "2" ]
   [ "$(stat -c %a "$dest")" = "700" ]
 }
 
@@ -56,6 +60,21 @@ run_backup() {
   mkdir "$BATS_TEST_TMPDIR/x"
   age -d -i "$KEY" "$dest/escrow.tar.age" | tar -x -C "$BATS_TEST_TMPDIR/x"
   grep -q topsecret123 "$BATS_TEST_TMPDIR/x/secrets.env"
+}
+
+@test "database and uploads are encrypted: no plaintext, readable with either key, not with another" {
+  run run_backup
+  dest="$(printf '%s\n' "$output" | tail -n1)"
+  for f in db.dump.age storage.tar.gz.age escrow.tar.age; do
+    head -c 40 "$dest/$f" | grep -q "age-encryption.org"
+  done
+  ! grep -rq "PGDMP-fake-dump-content" "$dest"
+  [ -z "$(find "$BATS_TEST_TMPDIR/out" -name '*.plain' -o -name 'db.dump' -o -name 'storage.tar.gz')" ]
+  [ "$(age -d -i "$KEY" "$dest/db.dump.age")" = "PGDMP-fake-dump-content" ]
+  [ "$(age -d -i "$HOSTKEY" "$dest/db.dump.age")" = "PGDMP-fake-dump-content" ]
+  age-keygen -o "$BATS_TEST_TMPDIR/other.key" 2>/dev/null
+  run age -d -i "$BATS_TEST_TMPDIR/other.key" "$dest/db.dump.age"
+  [ "$status" -ne 0 ]
 }
 
 @test "manifest holds no secrets or message text" {
@@ -88,7 +107,7 @@ run_backup() {
   run run_backup --no-storage
   [ "$status" -eq 0 ]
   dest="$(printf '%s\n' "$output" | tail -n1)"
-  [ ! -e "$dest/storage.tar.gz" ]
+  [ ! -e "$dest/storage.tar.gz.age" ]
   [ "$(jq -r .storage_included "$dest/manifest.json")" = "false" ]
 }
 
@@ -96,5 +115,7 @@ run_backup() {
   run "$AGENT" --id "../x" --compose-file c --out o --recipient "$REC" --escrow-dir . --escrow-file a
   [ "$status" -eq 2 ]
   run "$AGENT" --id demo --compose-file c --out o --recipient "not-a-key" --escrow-dir . --escrow-file a
+  [ "$status" -eq 2 ]
+  run "$AGENT" --id demo --compose-file c --out o --escrow-dir . --escrow-file a
   [ "$status" -eq 2 ]
 }

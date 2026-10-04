@@ -6,13 +6,15 @@ Plain-language guide. Today everything is tested on a local practice stack; the 
 One dated folder per run, e.g. `20261004T020000Z`:
 - `db.dump` - the whole database (conversations, contacts, settings, users)
 - `storage.tar.gz` - uploaded files (photos, documents)
-- `escrow.tar.age` - the client's secrets (`secrets.env`) and settings (`client.yaml`), **locked with your public key**
-- `manifest.json` - sizes, checksums and counts (no message text)
+- `escrow.tar.age` - the client's secrets (`secrets.env`) and settings (`client.yaml`)
+- `manifest.json` - sizes, checksums and counts (no message text); the only readable file
+Names: `db.dump.age` (database) and `storage.tar.gz.age` (uploads) are **encrypted**, like the escrow, to TWO keys: your public key (private key offline) and a key kept on the server (`opskit/clients/<id>/backup.key`). So a stolen off-server copy cannot be read, and the monthly self-check can still open backups by itself.
 Redis is not backed up on purpose (it is only a cache and a job queue; jobs not yet processed at restore time are lost).
 
 ## The key (very important)
 - You create the key pair once on your own computer: `age-keygen -o owner.key`. It prints a line starting with `age1...`: that is your PUBLIC key. Put that line in `opskit/keys/owner.age.pub`.
-- `owner.key` is your PRIVATE key. Keep it OFFLINE (password manager + a printed or USB copy in a safe place). **Without it the secrets escrow cannot be opened.** Never commit it, never send it in chat.
+- `owner.key` is your PRIVATE key. Keep it OFFLINE (password manager + a printed or USB copy in a safe place). **If the server's own key is lost together with the server, your key is the only way to open the backups.** Never commit it, never send it in chat.
+- The server key (`backup.key`) is created automatically and stays on that server only; it is never copied off-server.
 
 ## Everyday commands
 - Back up now: `opskit/bin/opskit backup run <id>` (also prunes old backups: 14 days local; copies off-server and keeps 30 days there when `backup.remote` is set in `client.yaml`).
@@ -32,7 +34,7 @@ Tested: restoring with a different `SECRET_KEY_BASE` still works (password login
 ## If the whole server is gone
 1. Get a new server (Phase 11 guide), install the kit.
 2. Fetch the newest folder from the off-server storage.
-3. Use `owner.key` to open `escrow.tar.age` (`age -d -i owner.key escrow.tar.age | tar -x`), put `secrets.env` and `client.yaml` back under `opskit/clients/<id>/`, then restore (new-host restore is added in Phase 11).
+3. Use `owner.key` to open the files (`age -d -i owner.key escrow.tar.age | tar -x`; same for `db.dump.age` and `storage.tar.gz.age`), put `secrets.env` and `client.yaml` back under `opskit/clients/<id>/`, then restore (new-host restore is added in Phase 11).
 
 ## Not verified yet
 Real off-server storage, the cron schedule on a real host, restore onto a different host, bigger data sizes.

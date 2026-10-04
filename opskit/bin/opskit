@@ -192,6 +192,18 @@ cmd_selftest() {
     if backup_run "$id" >/dev/null 2>&1 && [ -n "$(latest_backup "$id")" ]; then _selftest_row "backup (db + uploads + escrow)" PASS "$(basename "$(latest_backup "$id")")"; else _selftest_row "backup (db + uploads + escrow)" FAIL "see: opskit backup run $id"; rc=1; fi
   fi
   if [ "$rc" -eq 0 ]; then
+    local bdir f plain=0
+    bdir="$(latest_backup "$id")"
+    for f in "$bdir"/*.age; do
+      head -c 40 "$f" | grep -q "age-encryption.org" || plain=1
+    done
+    if [ "$plain" -eq 0 ] && ! grep -rqa "PGDMP" "$bdir" && [ -z "$(find "$bdir" -name 'db.dump' -o -name 'storage.tar.gz')" ]; then
+      _selftest_row "backup is encrypted (no plaintext)" PASS "db, uploads and secrets are age-encrypted"
+    else
+      _selftest_row "backup is encrypted (no plaintext)" FAIL "plaintext found in $(basename "$bdir")"; rc=1
+    fi
+  fi
+  if [ "$rc" -eq 0 ]; then
     if out="$(backup_verify "$id" --identity "$key" --keep 2>&1)"; then _selftest_row "restore test (login/conv/attachment)" PASS "$(printf '%s' "$out" | tail -n1 | cut -c1-110)"; else _selftest_row "restore test (login/conv/attachment)" FAIL "$(printf '%s' "$out" | tail -n1 | cut -c1-110)"; rc=1; fi
   fi
   if [ "$rc" -eq 0 ]; then

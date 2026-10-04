@@ -89,6 +89,9 @@ restore_to_staging() {
   _verify_manifest_files "$bdir" || return 1
 
   RESTORE_ESCROW_STATUS="not-tested"
+  # data (database + uploads) is read with the owner key when given, otherwise with the key kept on this host
+  local datakey="${identity:-$(client_dir "$id")/backup.key}"
+  [ -r "$datakey" ] || { log_error "no key to read the backup: pass --identity <owner key> or restore on the host that has backup.key"; return 1; }
   mkdir -p "$sdir"
   if [ -n "$identity" ]; then
     decrypt_file "$bdir/escrow.tar.age" "$tmp/escrow.tar" "$identity" || return 1
@@ -105,12 +108,19 @@ restore_to_staging() {
   chmod 600 "$sdir/secrets.env"
 
   render_client "$sid" || return 1
-  build_aibot_image "$sid"
+  # staging runs the SAME bot image as the live client (no rebuild, no network); build only if it does not exist
+  if docker image inspect "opskit-aibot:${id}" >/dev/null 2>&1; then
+    docker tag "opskit-aibot:${id}" "opskit-aibot:${sid}"
+  else
+    build_aibot_image "$sid"
+  fi
   log_info "restoring into ${sid}: database"
   dc "$sid" up -d postgres redis >/dev/null
   _wait_container_healthy "$sid" postgres 120 || return 1
   local err
-  err="$(dc "$sid" exec -T postgres pg_restore -U postgres -d chatwoot --no-owner --clean --if-exists <"$bdir/db.dump" 2>&1 >/dev/null || true)"
+  decrypt_file "$bdir/db.dump.age" "$tmp/db.dump" "$datakey" || return 1
+  err="$(dc "$sid" exec -T postgres pg_restore -U postgres -d chatwoot --no-owner --clean --if-exists <"$tmp/db.dump" 2>&1 >/dev/null || true)"
+  rm -f "$tmp/db.dump"
   if printf '%s' "$err" | grep -qiE 'fatal|could not connect'; then
     log_error "pg_restore failed: $(printf '%s' "$err" | head -n1 | cut -c1-200)"
     return 1
@@ -118,9 +128,9 @@ restore_to_staging() {
   log_info "restoring into ${sid}: migrations check and start"
   dc "$sid" run --rm -T rails bundle exec rails db:chatwoot_prepare >/dev/null 2>&1 || { log_error "db:chatwoot_prepare failed on the restored database"; return 1; }
   dc "$sid" up -d rails >/dev/null
-  if [ -f "$bdir/storage.tar.gz" ]; then
+  if [ -f "$bdir/storage.tar.gz.age" ]; then
     log_info "restoring into ${sid}: uploads"
-    dc "$sid" exec -T rails tar xzf - -C /app/storage <"$bdir/storage.tar.gz" || { log_error "uploads restore failed"; return 1; }
+    age -d -i "$datakey" "$bdir/storage.tar.gz.age" | dc "$sid" exec -T rails tar xzf - -C /app/storage || { log_error "uploads restore failed"; return 1; }
   fi
   dc "$sid" up -d >/dev/null
   wait_healthy "$sid" "${OPSKIT_HEALTH_TIMEOUT:-300}" || return 1

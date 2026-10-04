@@ -16,10 +16,11 @@ setup() {
   cat >"$AGENT" <<'EOS'
 #!/usr/bin/env bash
 [ -z "${FAKE_FAIL:-}" ] || { echo "boom" >&2; exit 1; }
+printf '%s\n' "$@" >"${FAKE_ARGS_FILE:-/dev/null}"
 while [ $# -gt 0 ]; do [ "$1" = "--out" ] && out="$2"; [ "$1" = "--id" ] && id="$2"; shift; done
 ts="${FAKE_TS:-$(date -u +%Y%m%dT%H%M%SZ)}"
 d="$out/$id/$ts"; mkdir -p "$d"
-echo dump >"$d/db.dump"; echo tar >"$d/storage.tar.gz"; echo enc >"$d/escrow.tar.age"; echo '{}' >"$d/manifest.json"
+echo dump >"$d/db.dump.age"; echo tar >"$d/storage.tar.gz.age"; echo enc >"$d/escrow.tar.age"; echo '{}' >"$d/manifest.json"
 echo "$d"
 EOS
   chmod +x "$AGENT"
@@ -30,7 +31,7 @@ EOS
   run "$OPSKIT" backup run demo
   [ "$status" -eq 0 ]
   ts="$("$OPSKIT" backup list demo | tail -n1)"
-  [ -s "$REMOTE/demo/$ts/db.dump" ]
+  [ -s "$REMOTE/demo/$ts/db.dump.age" ]
   [ -s "$REMOTE/demo/$ts/escrow.tar.age" ]
   [ -z "$(ls "$OPSKIT_ALERT_DIR" 2>/dev/null)" ]
 }
@@ -81,4 +82,22 @@ EOS
   run "$OPSKIT" backup run shop
   [ "$status" -ne 0 ]
   [[ "$output" == *"not supported yet"* ]]
+}
+
+@test "the wrapper encrypts to the owner key AND a host key kept on the host" {
+  export FAKE_ARGS_FILE="$BATS_TEST_TMPDIR/agent.args"
+  run "$OPSKIT" backup run demo
+  [ "$status" -eq 0 ]
+  [ "$(grep -c '^--recipient$' "$FAKE_ARGS_FILE")" -eq 2 ]
+  grep -q "^$OPSKIT_AGE_RECIPIENT$" "$FAKE_ARGS_FILE"
+  [ -s "$OPSKIT_CLIENTS_DIR/demo/backup.key" ]
+  [ "$(stat -c %a "$OPSKIT_CLIENTS_DIR/demo/backup.key")" = "600" ]
+  grep -q "^$(age-keygen -y "$OPSKIT_CLIENTS_DIR/demo/backup.key")$" "$FAKE_ARGS_FILE"
+}
+
+@test "the host key is created once and reused" {
+  "$OPSKIT" backup run demo
+  first="$(sha256sum "$OPSKIT_CLIENTS_DIR/demo/backup.key" | cut -d' ' -f1)"
+  "$OPSKIT" backup run demo
+  [ "$first" = "$(sha256sum "$OPSKIT_CLIENTS_DIR/demo/backup.key" | cut -d' ' -f1)" ]
 }
