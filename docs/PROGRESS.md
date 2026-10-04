@@ -2,7 +2,7 @@
 
 ## Current status
 - **Current phase:** Phase 6 done locally; next: Phase 7 (industry packs) when the owner says go
-- **Current task:** Phase 7 approved (defaults); next: 7.1. FIRST finish Phase 6: read the full-check log result, update the Phase 6 rows in this file that say PENDING, push
+- **Current task:** Phase 7 in progress (7.2-7.3 data format and packs being written; 7.1 live checks next)
 - **Last updated:** 2026-10-04
 
 ## How we work with the owner (read this first in a new chat)
@@ -39,7 +39,7 @@
 | 3 | Backups & restore | Done locally (real off-server storage / real host cron / new-host restore NOT VERIFIED) | `opskit/bin/check` (non-quick) passes incl. selftest v2, 2026-10-04 |
 | 4 | Monitoring & alerts (Telegram-only, ADR-016) | Done locally (real Telegram / real-host cron / hub NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. 8 monitoring scenarios, 2026-10-04 |
 | 5 | Safe upgrades | Done locally (real server / real client data / bot check NOT VERIFIED) | opskit/bin/check (non-quick) passes incl. selftest upgrade, 2026-10-04 |
-| 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | full `opskit/bin/check` was still running when this was pushed: bats suites passed, selftests PENDING (update this row when it finishes) |
+| 6 | Channel runbooks & checkers | Done locally (real Telegram / WhatsApp / Meta / Gmail side NOT VERIFIED) | `opskit/bin/check`: shellcheck, bats (all suites), aibot, `selftest upgrade` PASS; `opskit selftest` PASS with exit 0 after fixing the exit-trap bug (see below), 2026-10-04 |
 | 7 | Industry starter packs bn + en | Planned and approved (all 8 defaults accepted); start at 7.1 once the Phase 6 full check has finished | — |
 | 8 | aibot | Not started | — |
 | 9 | Monthly care report | Not started | — |
@@ -80,9 +80,9 @@
 | No secrets printed | PASS | selftest asserts no token/password in output; tokens go to curl through stdin config, mail prober never prints passwords; probes are read-only |
 | `channels plan <id>` client/owner to-do list en + bn | PASS | bats `channel_plan.bats` (7); Bangla flagged `review_required` |
 | Runbooks (5) | WRITTEN, not yet tried with real accounts | `docs/runbooks/*`; facts from Chatwoot code + public docs (web search) |
-| `opskit selftest` incl. channel rows | PASSED earlier in the session (before wording edits); final full-check run PENDING | update when `opskit/bin/check` finishes |
+| `opskit selftest` incl. channel rows | PASS | final run: "SELFTEST PASSED", exit 0, 0 containers/volumes left over |
 | Upstream files unchanged | PASS | upstream-path bats test: 0 files differ from v4.18.0 |
-Bugs found and fixed during the phase: `docker exec` stdin swallowing, status-code concatenation ("000000"), subshell-lost status variables, fake IMAP lacking `EXAMINE`, patched-upstream gap in `sync-rehearsal`.
+Bugs found and fixed during the phase: selftest exit trap (a failing `kill` of already-stopped fake servers made a passing selftest exit 1 and skipped teardown), `docker exec` stdin swallowing, status-code concatenation ("000000"), subshell-lost status variables, fake IMAP lacking `EXAMINE`, patched-upstream gap in `sync-rehearsal`.
 NOT VERIFIED: anything that needs the real Telegram, Meta/WhatsApp, Facebook/Instagram or Gmail/Microsoft servers (sandbox cannot reach them) - the WhatsApp runbook has NOT been walked with a Meta test number (pending the owner's Meta account); Gmail/Workspace OAuth wording and WhatsApp billing change of 1 Oct 2026 come from web research (A-029, *(verify)*); the Bangla texts need proofreading.
 
 ### Phase 5 verification (2026-10-04, cloud sandbox)
