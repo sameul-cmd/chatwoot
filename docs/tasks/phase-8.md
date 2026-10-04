@@ -77,7 +77,7 @@ What I can prove **here**: every rule, the whole message flow against a real Cha
 - **Goal:** `eval.py` runs a client's test set (YAML: question, language, expected outcome: answer containing certain facts / handoff / forbidden claims) through the real pipeline and scores **correct / handed off / wrong / wrong price-or-policy**, prints the gate result (0 wrong prices/policies and at least 90% correct-or-handed-off) and a table of failures without customer data; `opskit bot eval <id>`. A demo KB (fictional shop) and a 24-question demo test set (KB questions in bn/en/Banglish, off-topic, human request, complaint, invented-price traps).
 - **Acceptance:** with the scripted fake AI the harness scores each case type correctly and the gate logic passes/fails as designed (pytest); documented that the real-model score must be taken with your key.
 
-### [ ] 8.10 — Live acceptance and selftest v7
+### [x] 8.10 — Live acceptance and selftest v7
 - **Goal:** on the demo stack with the fake AI server reachable from the aibot container: `bot enable`, a visitor asks a KB question in Bangla and in English and gets the cited answer with the disclosure on the first message; "মানুষ চাই" and "talk to a human", an off-topic question, a complaint, and the fourth message all hand off (status open, label `ai-handoff`, team if set); AI down (fake stopped) hands off with reason `llm_error`; `bot disable` stops it; no message text in the aibot logs; client mode refuses to start without the paid flag. Add these rows to `opskit selftest`.
 - **Acceptance:** all rows as expected in `opskit selftest`.
 

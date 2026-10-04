@@ -536,8 +536,9 @@ _selftest_bot_run() {
   if [ "$out" = open ] && [ "$(jq -r .status <<<"$a")" = open ] && [ "$(jq '.bot | length' <<<"$a")" = 0 ] && [ -z "$(_bot_attached 1 "$(cw_request GET "$base/agent_bots" | jq -r '.[] | select(.name == "opskit-aibot") | .id')")" ]; then
     _selftest_row "bot: kill switch" PASS "detached, waiting chat opened, new chats go straight to people"
   else _selftest_row "bot: kill switch" FAIL "bot still attached or chat stranded"; return 1; fi
-  if docker run --rm --entrypoint python -e AIBOT_MODE=client -e AIBOT_LLM_BASE_URL=http://x.example/v1 -e AIBOT_LLM_MODEL=m "opskit-aibot:${id}" \
-    -c 'import os; from aibot.config import load_config; load_config(os.environ)' 2>&1 | grep -q AIBOT_LLM_TIER_PAID; then
+  out="$(docker run --rm --entrypoint python -e AIBOT_MODE=client -e AIBOT_LLM_BASE_URL=http://x.example/v1 -e AIBOT_LLM_MODEL=m "opskit-aibot:${id}" \
+    -c 'import os; from aibot.config import load_config; load_config(os.environ)' 2>&1 || true)"
+  if [[ "$out" == *AIBOT_LLM_TIER_PAID* ]]; then
     _selftest_row "bot: client mode needs paid key flag" PASS "refuses to start without AIBOT_LLM_TIER_PAID=true"
   else _selftest_row "bot: client mode needs paid key flag" FAIL "started without the paid-tier statement"; return 1; fi
 }
