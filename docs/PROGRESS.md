@@ -73,6 +73,19 @@
 <!-- Bugs or gaps found outside current task scope. -->
 
 ## Phase verification reports
+### Setup verification (2026-10-08, owner's Windows laptop, first local machine)
+| Criterion | Result | Evidence |
+|---|---|---|
+| Repo cloned on the working branch; kit docs match the cloud state | PASS | branch `claude/wizardly-babbage-ui2rpa`, HEAD `26aacaf` + local commits; `docs/NEXT.md`/`ADOPT.md`/`PROGRESS.md` read before anything else |
+| Machine bootstrapped per ADOPT §5/§6 | PASS | `dev-setup` all good (exit 0) inside Ubuntu-24.04 WSL: apt tools, uv, Python 3.12, aibot deps, docker daemon |
+| Docker isolated from the owner's other projects | PASS | `docker.io` inside Ubuntu only (ADR-018); Docker Desktop engine (owner's other stacks) never connected to, stopped or pruned |
+| `opskit/bin/check --quick` | PASS | ALL CHECKS PASSED (shellcheck, 218 bats, aibot ruff+mypy --strict+107 pytest) after: `python3-pip` install, jsonschema/referencing force-upgrade (A-048), upstream release tags fetched into the clone, `docker-buildx` + `docker-compose-v2` + BuildKit flag (A-049) |
+| Live demo stack deploy + 5-point `client check` | PASS | all 5 PASS (login, /api, sdk.js, websocket, sidekiq email) at `https://chat.demo.localhost:8443` after the rails healthcheck fix (A-050: `127.0.0.1` not `localhost`; musl resolves `localhost`→`::1`, puma is IPv4-only). Stack paused afterwards to free RAM |
+| `opskit selftest` live rows | PASS (18 rows) then HUNG | deploy/seed/backup/encrypted-restore/overwrite-protection + all 8 monitoring rows PASS on this machine; the channel rows hung after rails 500ed on inbox creation — selftest ran beside a second live Chatwoot stack (my paused-late demo) on a 2-core/4.3 GB VM, load 33-59 |
+Bugs found on this machine (not in the cloud sandbox): the healthcheck `localhost` bug (fixed, tested, committed); Ubuntu 24.04 pip/jsonschema/yq shadowing; missing buildx/compose plugins; WSL restart needed care because the owner's containers share the VM.
+NOT VERIFIED on this machine: the full `check` in one clean run (channel/pack/bot selftest rows after the hang point; they passed in the cloud sandbox 2026-10-04 and their bats/pytest suites pass here). Decision: `check --quick` is the routine local gate on this laptop; full selftest runs when only one stack is live (~1.5-2.5 h here vs 13-20 min in the cloud) or in Codespaces (`docs/STAGING.md`).
+Owner to-do: the AI key for 8.12 (`opskit llm set-key demo --base-url … --paid`, hidden prompt) + tell the agent base URL, chat model, embedding model.
+
 ### Phase 8 verification (2026-10-04, cloud sandbox, scripted fake AI)
 | Criterion | Result | Evidence |
 |---|---|---|
