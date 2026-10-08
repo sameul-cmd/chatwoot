@@ -5,6 +5,8 @@
 ## 1. Laptop (all work in WSL2 Ubuntu)
 Windows 10/11 + WSL2 Ubuntu 24.04 (WSL memory ~7–8 GB), Docker Desktop (WSL integration), VS Code Remote-WSL with Kilo Code or Factory `droid` run inside WSL, git, openssl, jq, yq, envsubst, curl, shellcheck, bats, age, rclone, ssh, Python 3.12 + uv/pip (aibot), ngrok free (HTTPS for mobile app/webhooks during exploration).
 
+> **Owner's actual machine (2026-10-08, ADR-018):** Windows 10 22H2, 8 GB RAM, WSL VM capped at 4608 MB via `C:\Users\<user>\.wslconfig`; Docker = `docker.io` **inside** Ubuntu (not Docker Desktop's engine — that runs the owner's other projects and is never touched). Two clones: Windows copy for editing (LF, `core.autocrlf=false`), `~/work/chatwoot-ops` in Ubuntu for all runs. `python3-pip` must be installed before `dev-setup`; Ubuntu's apt `jsonschema` must be force-upgraded (see PROGRESS lessons). Free staging options: `docs/STAGING.md`.
+
 ## 2. Accounts
 GitHub (fork, Actions, GHCR) · Telegram bot (demo inbox + owner alerts) · test mailbox (IMAP/SMTP) · Meta developer account (WhatsApp test number / FB app, optional in Phase 0) · Gemini key (free tier for demo data; paid tier project for clients) · VPS + domains · off-server backup remote · Oracle Cloud (optional arm64 practice).
 

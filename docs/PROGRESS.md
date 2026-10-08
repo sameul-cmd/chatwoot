@@ -2,8 +2,8 @@
 
 ## Current status
 - **Current phase:** Phase 8 - aibot (built and verified with the pretend AI; real-AI check 8.12 pending the owner's key)
-- **Current task:** Phase 8 tasks 8.1-8.11 done; 8.12 (real-model check) waits for the owner's key in a new session. Phases 9, 10, 11 are planned. **New session: read `docs/ADOPT.md` first.**
-- **Last updated:** 2026-10-04
+- **Current task:** 8.12 in progress on the owner's Windows laptop (key declared available 2026-10-08); Phases 9, 10, 11 are planned. **New session: read `docs/ADOPT.md` first.**
+- **Last updated:** 2026-10-08
 
 ## How we work with the owner (read this first in a new chat; the tool-neutral entry point is `docs/ADOPT.md`)
 - The owner is non-technical / semi-technical: explain in plain words, define any technical term, give numbered "do this" steps for anything the owner must do, say what can be skipped and what you will handle yourself. Never ask the owner to type commands unless unavoidable; then give the exact text and what it does.
@@ -26,6 +26,7 @@
 - Cloud sandbox: the Docker daemon is not started automatically (`opskit/bin/dev-setup` does it); behind the proxy use `OPSKIT_BUILD_CA=/root/.ccr/ca-bundle.crt`; Docker Hub rate limits (HTTP 429) are common: use `OPSKIT_AIBOT_IMAGE=opskit-aibot:test` (built earlier) or retry; a restarted sandbox keeps the disk but not running containers.
 - The API header must be `api-access-token` (with dashes) through Caddy.
 - Long runs (> 8 min) must go in the background with a log file and polling; the tool time limit is 10 minutes.
+- Windows laptop (2026-10-08, ADR-018): the kit runs in `docker.io` inside Ubuntu WSL; the owner's Docker Desktop engine hosts other projects and is never touched (no `wsl --shutdown` without the owner's OK). A Windows git clone turns scripts CRLF and kills every bash shebang: set `core.autocrlf=false` before checkout. Forks lack Chatwoot's release tags: add `upstream` (push disabled) and fetch `v4.17.1`/`v4.18.0` (git tags have no `-ce`). Ubuntu 24.04's apt `jsonschema` (via `yq`) shadows pip's and lacks the `registry=` kwarg: force-upgrade with `--break-system-packages --ignore-installed`. `python3-pip` is missing on a fresh Ubuntu 24.04. PowerShell→wsl.exe→bash quoting mangles `$`: run a script file, not inline `bash -c`. See `docs/STAGING.md` for the machine layout.
 
 ## Machine setup (new session / new machine)
 `opskit/bin/dev-setup` installs/starts everything needed (system tools, Python libs, uv + Python 3.12, aibot deps, Docker daemon) and ends with `opskit/bin/opskit doctor`. Then `opskit/bin/check --quick` (1 min) or `opskit/bin/check` (about 13 min, includes both selftests).
